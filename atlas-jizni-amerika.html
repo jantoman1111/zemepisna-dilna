@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Atlas Jižní Ameriky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --parchment:#EFE6D2; --parchment-dark:#E4D8BC; --ink:#2B2418; --ink-soft:#5B5240;
+    --forest:#3C5B45; --forest-dark:#2A4232; --rust:#B5533C; --gold:#B08A32; --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%), var(--parchment);
+    color:var(--ink); font-family:'Source Sans 3', sans-serif; min-height:100vh;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; padding:24px 20px 50px; }
+  header{ border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:700; font-size:clamp(24px,4vw,36px); margin:0 0 4px; color:var(--forest-dark); }
+  h1 span{ color:var(--rust); }
+  .subtitle{ margin:0; font-size:14.5px; color:var(--ink-soft); font-style:italic; }
+
+  .layout{ display:grid; grid-template-columns:minmax(320px,660px) minmax(300px,1fr); gap:24px; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .map-card{ background:rgba(255,255,255,0.35); border:1px solid var(--line); border-radius:6px; padding:14px; position:relative; }
+  #map{ width:100%; height:auto; display:block; background:#DCE7E0; border-radius:4px; }
+  .country{ stroke:var(--parchment); stroke-width:1.1; cursor:pointer; transition:fill .12s; fill:var(--forest); }
+  .country:hover{ fill:#4E7157; }
+  .country.active{ fill:var(--rust); }
+  .country.other{ fill:#C9C2AD; stroke:var(--parchment); stroke-width:0.8; pointer-events:none; }
+  .legend{ margin-top:8px; font-size:12px; text-align:center; color:var(--ink-soft); }
+
+  .panel{ background:#FBF7EC; border:1px solid var(--line); border-radius:6px; padding:26px 26px 22px; min-height:480px; }
+  .panel-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%; min-height:430px; color:var(--ink-soft); }
+  .panel-empty svg{ width:60px; height:60px; margin-bottom:14px; opacity:0.5; }
+  .panel-empty p{ max-width:280px; line-height:1.5; }
+
+  .region-eyebrow{ font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin:0 0 4px; }
+  .region-title{ font-family:'Fraunces', serif; font-weight:700; font-size:28px; margin:0 0 16px; color:var(--forest-dark); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:2px; }
+  .stat .v{ font-size:15px; font-weight:600; color:var(--ink); }
+
+  .section{ margin-bottom:14px; }
+  .section h3{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; color:var(--forest-dark); margin:0 0 5px; display:flex; align-items:center; gap:7px; }
+  .section h3::before{ content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block; }
+  .section p{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0; }
+  .funfact{ background:var(--parchment-dark); border-left:3px solid var(--rust); padding:12px 14px; border-radius:0 4px 4px 0; font-size:14px; font-style:italic; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Jižní Ameriky</h1>
+    <p class="subtitle">Klikni na stát v mapě a zobrazí se jeho základní informace.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-card">
+      <svg id="map" viewBox="0 0 1000 840" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <text x="500" y="390" text-anchor="middle" fill="#5B5240" font-family="sans-serif" font-size="16" id="loadingText">Načítám mapu…</text>
+      </svg>
+      <p class="legend">12 států · klikni pro informace</p>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="panel-empty" id="panelEmpty">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#5B5240" stroke-width="2">
+          <circle cx="32" cy="32" r="26"/>
+          <path d="M8 32h48M32 8c8 8 8 40 0 48M32 8c-8 8-8 40 0 48"/>
+        </svg>
+        <p>Vyber stát kliknutím na mapě vlevo a zobrazí se hlavní město, rozloha, obyvatelstvo, měna, jazyk i zajímavost.</p>
+      </div>
+      <div id="panelContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const countries = {
+  AR:{name:"Argentina", capital:"Buenos Aires", area:"2 780 400 km²", population:"≈ 46 mil.", currency:"argentinské peso", language:"španělština", eu:"", fact:"Táhne se přes 3 700 km od tropů až po ledovce Patagonie na jihu."},
+  BO:{name:"Bolívie", capital:"Sucre / La Paz (sídlo vlády)", area:"1 098 581 km²", population:"≈ 12 mil.", currency:"boliviano", language:"španělština, kečuánština, ajmarština", eu:"", fact:"Jezero Titicaca je nejvýše položené splavné jezero na světě."},
+  BR:{name:"Brazílie", capital:"Brasília", area:"8 515 767 km² (5. největší stát světa)", population:"≈ 216 mil.", currency:"brazilský real", language:"portugalština", eu:"", fact:"Pokrývá ji z velké části Amazonský prales — plíce planety."},
+  CL:{name:"Chile", capital:"Santiago", area:"756 096 km²", population:"≈ 19,6 mil.", currency:"chilské peso", language:"španělština", eu:"", fact:"Je extrémně dlouhé a úzké — táhne se přes 4 300 km podél pobřeží Pacifiku."},
+  CO:{name:"Kolumbie", capital:"Bogotá", area:"1 141 748 km²", population:"≈ 52 mil.", currency:"kolumbijské peso", language:"španělština", eu:"", fact:"Jediná jihoamerická země s pobřežím u Tichého i Atlantského oceánu."},
+  EC:{name:"Ekvádor", capital:"Quito", area:"283 561 km²", population:"≈ 18 mil.", currency:"americký dolar", language:"španělština", eu:"", fact:"Pojmenovaný podle rovníku, který zemí prochází. Patří sem i Galapágy."},
+  GY:{name:"Guyana", capital:"Georgetown", area:"214 969 km²", population:"≈ 810 tisíc", currency:"guyanský dolar", language:"angličtina", eu:"", fact:"Jediná jihoamerická země s angličtinou jako úředním jazykem."},
+  PY:{name:"Paraguay", capital:"Asunción", area:"406 752 km²", population:"≈ 6,9 mil.", currency:"guaraní", language:"španělština, guaraní", eu:"", fact:"Nemá přístup k moři, ale velkou vodní elektrárnu Itaipú na řece Paraná."},
+  PE:{name:"Peru", capital:"Lima", area:"1 285 216 km²", population:"≈ 34 mil.", currency:"sol", language:"španělština, kečuánština", eu:"", fact:"Domov starobylého inckého města Machu Picchu vysoko v Andách."},
+  SR:{name:"Surinam", capital:"Paramaribo", area:"163 820 km²", population:"≈ 620 tisíc", currency:"surinamský dolar", language:"nizozemština", eu:"", fact:"Nejmenší stát Jižní Ameriky, bývalá nizozemská kolonie."},
+  UY:{name:"Uruguay", capital:"Montevideo", area:"176 215 km²", population:"≈ 3,4 mil.", currency:"uruguayské peso", language:"španělština", eu:"", fact:"Jedna z nejstabilnějších demokracií Jižní Ameriky a vlast fotbalového mistra světa z roku 1930."},
+  VE:{name:"Venezuela", capital:"Caracas", area:"916 445 km²", population:"≈ 28 mil.", currency:"bolívar", language:"španělština", eu:"", fact:"Najdeš tu Salto Ángel — nejvyšší vodopád světa (979 m)."}
+};
+
+const NUM2A2 = {"032":"AR","068":"BO","076":"BR","152":"CL","170":"CO","218":"EC","328":"GY","600":"PY","604":"PE","740":"SR","858":"UY","862":"VE"};
+function resolveAlpha(id){ return NUM2A2[String(id)] || NUM2A2[String(id).padStart(3,"0")] || null; }
+
+const svgEl = d3.select("#map");
+const proj = d3.geoMercator().center([-60,-18]).scale(340).translate([500,420]);
+const pathGen = d3.geoPath().projection(proj);
+let activeEl = null;
+
+async function loadMap(){
+  try{
+    const res = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
+    const world = await res.json();
+    const features = topojson.feature(world, world.objects.countries).features;
+    document.getElementById("loadingText").remove();
+
+    features.forEach(f=>{
+      const alpha = resolveAlpha(f.id);
+      const info = alpha ? countries[alpha] : null;
+      const path = svgEl.append("path")
+        .datum(f)
+        .attr("d", pathGen)
+        .attr("class", info ? "country" : "country other");
+      if(info){
+        path.attr("id","c_"+alpha).on("click", ()=>selectCountry(alpha, path.node()));
+      }
+    });
+  }catch(e){
+    document.getElementById("loadingText").textContent = "Mapu se nepodařilo načíst. Zkontrolujte připojení k internetu.";
+  }
+}
+loadMap();
+
+function selectCountry(alpha, el){
+  if(activeEl) activeEl.classList.remove("active");
+  el.classList.add("active");
+  activeEl = el;
+
+  const c = countries[alpha];
+  document.getElementById("panelEmpty").style.display = "none";
+  const content = document.getElementById("panelContent");
+  content.style.display = "block";
+  content.innerHTML = `
+    <p class="region-eyebrow">Stát</p>
+    <h2 class="region-title">${c.name}</h2>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Hlavní město</div><div class="v">${c.capital}</div></div>
+      <div class="stat"><div class="k">Rozloha</div><div class="v">${c.area}</div></div>
+      <div class="stat"><div class="k">Obyvatelé</div><div class="v">${c.population}</div></div>
+      <div class="stat"><div class="k">Měna</div><div class="v">${c.currency}</div></div>
+    </div>
+
+    <div class="section"><h3>Jazyk</h3><p>${c.language}</p></div>
+    <div class="funfact">${c.fact}</div>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Atlas Severní Ameriky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --parchment:#EFE6D2; --parchment-dark:#E4D8BC; --ink:#2B2418; --ink-soft:#5B5240;
+    --forest:#3C5B45; --forest-dark:#2A4232; --rust:#B5533C; --gold:#B08A32; --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%), var(--parchment);
+    color:var(--ink); font-family:'Source Sans 3', sans-serif; min-height:100vh;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; padding:24px 20px 50px; }
+  header{ border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:700; font-size:clamp(24px,4vw,36px); margin:0 0 4px; color:var(--forest-dark); }
+  h1 span{ color:var(--rust); }
+  .subtitle{ margin:0; font-size:14.5px; color:var(--ink-soft); font-style:italic; }
+
+  .layout{ display:grid; grid-template-columns:minmax(320px,660px) minmax(300px,1fr); gap:24px; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .map-card{ background:rgba(255,255,255,0.35); border:1px solid var(--line); border-radius:6px; padding:14px; position:relative; }
+  #map{ width:100%; height:auto; display:block; background:#DCE7E0; border-radius:4px; }
+  .country{ stroke:var(--parchment); stroke-width:1.1; cursor:pointer; transition:fill .12s; fill:var(--forest); }
+  .country:hover{ fill:#4E7157; }
+  .country.active{ fill:var(--rust); }
+  .country.other{ fill:#C9C2AD; stroke:var(--parchment); stroke-width:0.8; pointer-events:none; }
+  .legend{ margin-top:8px; font-size:12px; text-align:center; color:var(--ink-soft); }
+
+  .panel{ background:#FBF7EC; border:1px solid var(--line); border-radius:6px; padding:26px 26px 22px; min-height:480px; }
+  .panel-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%; min-height:430px; color:var(--ink-soft); }
+  .panel-empty svg{ width:60px; height:60px; margin-bottom:14px; opacity:0.5; }
+  .panel-empty p{ max-width:280px; line-height:1.5; }
+
+  .region-eyebrow{ font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin:0 0 4px; }
+  .region-title{ font-family:'Fraunces', serif; font-weight:700; font-size:28px; margin:0 0 16px; color:var(--forest-dark); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:2px; }
+  .stat .v{ font-size:15px; font-weight:600; color:var(--ink); }
+
+  .section{ margin-bottom:14px; }
+  .section h3{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; color:var(--forest-dark); margin:0 0 5px; display:flex; align-items:center; gap:7px; }
+  .section h3::before{ content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block; }
+  .section p{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0; }
+  .funfact{ background:var(--parchment-dark); border-left:3px solid var(--rust); padding:12px 14px; border-radius:0 4px 4px 0; font-size:14px; font-style:italic; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Severní Ameriky</h1>
+    <p class="subtitle">Klikni na stát v mapě a zobrazí se jeho základní informace.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-card">
+      <svg id="map" viewBox="0 0 1000 820" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <text x="500" y="390" text-anchor="middle" fill="#5B5240" font-family="sans-serif" font-size="16" id="loadingText">Načítám mapu…</text>
+      </svg>
+      <p class="legend">23 států · klikni pro informace</p>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="panel-empty" id="panelEmpty">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#5B5240" stroke-width="2">
+          <circle cx="32" cy="32" r="26"/>
+          <path d="M8 32h48M32 8c8 8 8 40 0 48M32 8c-8 8-8 40 0 48"/>
+        </svg>
+        <p>Vyber stát kliknutím na mapě vlevo a zobrazí se hlavní město, rozloha, obyvatelstvo, měna, jazyk i zajímavost.</p>
+      </div>
+      <div id="panelContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const countries = {
+  CA:{name:"Kanada", capital:"Ottawa", area:"9 984 670 km² (2. největší stát světa)", population:"≈ 39 mil.", currency:"kanadský dolar", language:"angličtina, francouzština", eu:"", fact:"Má nejdelší pobřeží ze všech států světa a víc jezer než zbytek světa dohromady."},
+  US:{name:"USA", capital:"Washington, D.C.", area:"9 833 517 km²", population:"≈ 335 mil.", currency:"americký dolar", language:"angličtina", eu:"", fact:"Skládá se z 50 států — poslední dva, Aljaška a Havaj, přibyly až v roce 1959."},
+  MX:{name:"Mexiko", capital:"Ciudad de México", area:"1 964 375 km²", population:"≈ 128 mil.", currency:"mexické peso", language:"španělština", eu:"", fact:"Hlavní město leží na místě starobylého aztéckého města Tenochtitlán."},
+  GT:{name:"Guatemala", capital:"Ciudad de Guatemala", area:"108 889 km²", population:"≈ 18 mil.", currency:"quetzal", language:"španělština", eu:"", fact:"Domov starobylých mayských pyramid, například v Tikalu."},
+  BZ:{name:"Belize", capital:"Belmopan", area:"22 966 km²", population:"≈ 410 tisíc", currency:"belizský dolar", language:"angličtina", eu:"", fact:"Jediná středoamerická země, kde je úředním jazykem angličtina."},
+  HN:{name:"Honduras", capital:"Tegucigalpa", area:"112 492 km²", population:"≈ 10,4 mil.", currency:"lempira", language:"španělština", eu:"", fact:"Pojmenovaný podle hlubokých vod u svého pobřeží — „honduras“ znamená hlubiny."},
+  SV:{name:"Salvador", capital:"San Salvador", area:"21 041 km²", population:"≈ 6,3 mil.", currency:"americký dolar", language:"španělština", eu:"", fact:"Nejmenší a nejhustěji zalidněná pevninská země Střední Ameriky."},
+  NI:{name:"Nikaragua", capital:"Managua", area:"130 373 km²", population:"≈ 6,9 mil.", currency:"cordoba", language:"španělština", eu:"", fact:"Najdeš tu největší jezero Střední Ameriky — Nikaragujské jezero se sladkovodními žraloky."},
+  CR:{name:"Kostarika", capital:"San José", area:"51 100 km²", population:"≈ 5,2 mil.", currency:"kostarický colón", language:"španělština", eu:"", fact:"Nemá stálou armádu už od roku 1948 a je proslulá ochranou deštných pralesů."},
+  PA:{name:"Panama", capital:"Ciudad de Panamá", area:"75 417 km²", population:"≈ 4,4 mil.", currency:"balboa / americký dolar", language:"španělština", eu:"", fact:"Panamský průplav propojuje Atlantský a Tichý oceán a zkracuje lodím cestu o tisíce kilometrů."},
+  CU:{name:"Kuba", capital:"Havana", area:"109 884 km²", population:"≈ 11 mil.", currency:"kubánské peso", language:"španělština", eu:"", fact:"Největší ostrov Karibiku, proslulý doutníky, salsou a starými americkými auty."},
+  JM:{name:"Jamajka", capital:"Kingston", area:"10 991 km²", population:"≈ 2,8 mil.", currency:"jamajský dolar", language:"angličtina", eu:"", fact:"Rodiště reggae hudby a legendárního zpěváka Boba Marleyho."},
+  HT:{name:"Haiti", capital:"Port-au-Prince", area:"27 750 km²", population:"≈ 11,7 mil.", currency:"gourde", language:"francouzština, haitská kreolština", eu:"", fact:"V roce 1804 se stalo první nezávislou černošskou republikou na světě."},
+  DO:{name:"Dominikánská republika", capital:"Santo Domingo", area:"48 671 km²", population:"≈ 11,3 mil.", currency:"dominikánské peso", language:"španělština", eu:"", fact:"Sdílí ostrov Hispaniola s Haiti — oblíbená turistická destinace u moře."},
+  BS:{name:"Bahamy", capital:"Nassau", area:"13 943 km²", population:"≈ 410 tisíc", currency:"bahamský dolar", language:"angličtina", eu:"", fact:"Tvoří ji přes 700 ostrovů a ostrůvků v Karibském moři."},
+  TT:{name:"Trinidad a Tobago", capital:"Port of Spain", area:"5 130 km²", population:"≈ 1,5 mil.", currency:"trinidadský a tobažský dolar", language:"angličtina", eu:"", fact:"Odsud pochází hudební styl calypso a steelpan bubny."},
+  AG:{name:"Antigua a Barbuda", capital:"St. John's", area:"442 km²", population:"≈ 94 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Tvoří ji dva hlavní ostrovy s celkem 365 plážemi — na každý den v roce jedna."},
+  BB:{name:"Barbados", capital:"Bridgetown", area:"430 km²", population:"≈ 280 tisíc", currency:"barbadoský dolar", language:"angličtina", eu:"", fact:"Odsud pochází zpěvačka Rihanna; ostrov je proslulý rumem."},
+  DM:{name:"Dominika", capital:"Roseau", area:"751 km²", population:"≈ 73 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Přezdívá se jí „ostrov přírody“ díky husté tropické zeleni a sopkám."},
+  GD:{name:"Grenada", capital:"St. George's", area:"344 km²", population:"≈ 125 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Přezdívá se jí „kořeninový ostrov“ — pěstuje se tu hodně muškátového oříšku."},
+  LC:{name:"Svatá Lucie", capital:"Castries", area:"616 km²", population:"≈ 180 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Proslulá dvěma sopečnými vrcholy Piton, zapsanými na seznamu UNESCO."},
+  KN:{name:"Svatý Kryštof a Nevis", capital:"Basseterre", area:"261 km²", population:"≈ 47 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Nejmenší stát celé Ameriky rozlohou i počtem obyvatel."},
+  VC:{name:"Svatý Vincenc a Grenadiny", capital:"Kingstown", area:"389 km²", population:"≈ 104 tisíc", currency:"východokaribský dolar", language:"angličtina", eu:"", fact:"Tvoří ho hlavní ostrov a řetěz drobných ostrůvků zvaných Grenadiny."}
+};
+
+const NUM2A2 = {"124":"CA","840":"US","484":"MX","320":"GT","084":"BZ","340":"HN","222":"SV","558":"NI","188":"CR","591":"PA","192":"CU","388":"JM","332":"HT","214":"DO","044":"BS","780":"TT","028":"AG","052":"BB","212":"DM","308":"GD","662":"LC","659":"KN","670":"VC"};
+function resolveAlpha(id){ return NUM2A2[String(id)] || NUM2A2[String(id).padStart(3,"0")] || null; }
+
+const svgEl = d3.select("#map");
+const proj = d3.geoMercator().center([-90,30]).scale(330).translate([500,420]);
+const pathGen = d3.geoPath().projection(proj);
+let activeEl = null;
+
+async function loadMap(){
+  try{
+    const res = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
+    const world = await res.json();
+    const features = topojson.feature(world, world.objects.countries).features;
+    document.getElementById("loadingText").remove();
+
+    features.forEach(f=>{
+      const alpha = resolveAlpha(f.id);
+      const info = alpha ? countries[alpha] : null;
+      const path = svgEl.append("path")
+        .datum(f)
+        .attr("d", pathGen)
+        .attr("class", info ? "country" : "country other");
+      if(info){
+        path.attr("id","c_"+alpha).on("click", ()=>selectCountry(alpha, path.node()));
+      }
+    });
+  }catch(e){
+    document.getElementById("loadingText").textContent = "Mapu se nepodařilo načíst. Zkontrolujte připojení k internetu.";
+  }
+}
+loadMap();
+
+function selectCountry(alpha, el){
+  if(activeEl) activeEl.classList.remove("active");
+  el.classList.add("active");
+  activeEl = el;
+
+  const c = countries[alpha];
+  document.getElementById("panelEmpty").style.display = "none";
+  const content = document.getElementById("panelContent");
+  content.style.display = "block";
+  content.innerHTML = `
+    <p class="region-eyebrow">Stát</p>
+    <h2 class="region-title">${c.name}</h2>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Hlavní město</div><div class="v">${c.capital}</div></div>
+      <div class="stat"><div class="k">Rozloha</div><div class="v">${c.area}</div></div>
+      <div class="stat"><div class="k">Obyvatelé</div><div class="v">${c.population}</div></div>
+      <div class="stat"><div class="k">Měna</div><div class="v">${c.currency}</div></div>
+    </div>
+
+    <div class="section"><h3>Jazyk</h3><p>${c.language}</p></div>
+    <div class="funfact">${c.fact}</div>
+  `;
+}
+</script>
+</body>
+</html>

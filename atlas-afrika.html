@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Atlas Afriky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --parchment:#EFE6D2; --parchment-dark:#E4D8BC; --ink:#2B2418; --ink-soft:#5B5240;
+    --forest:#3C5B45; --forest-dark:#2A4232; --rust:#B5533C; --gold:#B08A32; --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%), var(--parchment);
+    color:var(--ink); font-family:'Source Sans 3', sans-serif; min-height:100vh;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; padding:24px 20px 50px; }
+  header{ border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:700; font-size:clamp(24px,4vw,36px); margin:0 0 4px; color:var(--forest-dark); }
+  h1 span{ color:var(--rust); }
+  .subtitle{ margin:0; font-size:14.5px; color:var(--ink-soft); font-style:italic; }
+
+  .layout{ display:grid; grid-template-columns:minmax(320px,660px) minmax(300px,1fr); gap:24px; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .map-card{ background:rgba(255,255,255,0.35); border:1px solid var(--line); border-radius:6px; padding:14px; position:relative; }
+  #map{ width:100%; height:auto; display:block; background:#DCE7E0; border-radius:4px; }
+  .country{ stroke:var(--parchment); stroke-width:1.1; cursor:pointer; transition:fill .12s; fill:var(--forest); }
+  .country:hover{ fill:#4E7157; }
+  .country.active{ fill:var(--rust); }
+  .country.other{ fill:#C9C2AD; stroke:var(--parchment); stroke-width:0.8; pointer-events:none; }
+  .legend{ margin-top:8px; font-size:12px; text-align:center; color:var(--ink-soft); }
+
+  .panel{ background:#FBF7EC; border:1px solid var(--line); border-radius:6px; padding:26px 26px 22px; min-height:480px; }
+  .panel-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%; min-height:430px; color:var(--ink-soft); }
+  .panel-empty svg{ width:60px; height:60px; margin-bottom:14px; opacity:0.5; }
+  .panel-empty p{ max-width:280px; line-height:1.5; }
+
+  .region-eyebrow{ font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin:0 0 4px; }
+  .region-title{ font-family:'Fraunces', serif; font-weight:700; font-size:28px; margin:0 0 16px; color:var(--forest-dark); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:2px; }
+  .stat .v{ font-size:15px; font-weight:600; color:var(--ink); }
+
+  .section{ margin-bottom:14px; }
+  .section h3{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; color:var(--forest-dark); margin:0 0 5px; display:flex; align-items:center; gap:7px; }
+  .section h3::before{ content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block; }
+  .section p{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0; }
+  .funfact{ background:var(--parchment-dark); border-left:3px solid var(--rust); padding:12px 14px; border-radius:0 4px 4px 0; font-size:14px; font-style:italic; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas Afriky</h1>
+    <p class="subtitle">Klikni na stát v mapě a zobrazí se jeho základní informace.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-card">
+      <svg id="map" viewBox="0 0 1000 840" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <text x="500" y="390" text-anchor="middle" fill="#5B5240" font-family="sans-serif" font-size="16" id="loadingText">Načítám mapu…</text>
+      </svg>
+      <p class="legend">54 států · klikni pro informace</p>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="panel-empty" id="panelEmpty">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#5B5240" stroke-width="2">
+          <circle cx="32" cy="32" r="26"/>
+          <path d="M8 32h48M32 8c8 8 8 40 0 48M32 8c-8 8-8 40 0 48"/>
+        </svg>
+        <p>Vyber stát kliknutím na mapě vlevo a zobrazí se hlavní město, rozloha, obyvatelstvo, měna, jazyk i zajímavost.</p>
+      </div>
+      <div id="panelContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const countries = {
+  DZ:{name:"Alžírsko", capital:"Alžír", area:"2 381 741 km² (největší stát Afriky)", population:"≈ 45 mil.", currency:"alžírský dinár", language:"arabština, berberština", eu:"", fact:"Většinu území pokrývá Sahara — jedna z nejsušších pouští světa."},
+  AO:{name:"Angola", capital:"Luanda", area:"1 246 700 km²", population:"≈ 36 mil.", currency:"kwanza", language:"portugalština", eu:"", fact:"Bohatá na ropu a diamanty, bývalá portugalská kolonie."},
+  BJ:{name:"Benin", capital:"Porto-Novo", area:"114 763 km²", population:"≈ 13,7 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Považuje se za kolébku náboženství vúdú."},
+  BW:{name:"Botswana", capital:"Gaborone", area:"581 730 km²", population:"≈ 2,5 mil.", currency:"pula", language:"angličtina, setswana", eu:"", fact:"Velkou část území pokrývá poušť Kalahari a delta řeky Okavango."},
+  BF:{name:"Burkina Faso", capital:"Ouagadougou", area:"274 200 km²", population:"≈ 23 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Název znamená „země čestných lidí“."},
+  BI:{name:"Burundi", capital:"Gitega", area:"27 834 km²", population:"≈ 13 mil.", currency:"burundský frank", language:"kirundština, francouzština", eu:"", fact:"Jeden z nejhustěji zalidněných a nejmenších států Afriky."},
+  CV:{name:"Kapverdy", capital:"Praia", area:"4 033 km²", population:"≈ 590 tisíc", currency:"kapverdské escudo", language:"portugalština", eu:"", fact:"Ostrovní stát v Atlantiku, odkud pochází hudební styl morna."},
+  CM:{name:"Kamerun", capital:"Yaoundé", area:"475 442 km²", population:"≈ 28 mil.", currency:"CFA frank", language:"francouzština, angličtina", eu:"", fact:"Přezdívá se mu „Afrika v miniatuře“ díky rozmanité krajině od pouště po deštný prales."},
+  CF:{name:"Středoafrická republika", capital:"Bangui", area:"622 984 km²", population:"≈ 5,5 mil.", currency:"CFA frank", language:"francouzština, sangó", eu:"", fact:"Leží přesně uprostřed afrického kontinentu, nemá přístup k moři."},
+  TD:{name:"Čad", capital:"N'Djamena", area:"1 284 000 km²", population:"≈ 18 mil.", currency:"CFA frank", language:"francouzština, arabština", eu:"", fact:"Pojmenovaný podle jezera Čad, které v posledních desetiletích výrazně vysychá."},
+  KM:{name:"Komory", capital:"Moroni", area:"2 235 km²", population:"≈ 850 tisíc", currency:"komorský frank", language:"komorština, francouzština, arabština", eu:"", fact:"Sopečné ostrovy v Indickém oceánu mezi Afrikou a Madagaskarem."},
+  CG:{name:"Kongo", capital:"Brazzaville", area:"342 000 km²", population:"≈ 5,8 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Nezaměňovat s větším sousedem — Konžskou demokratickou republikou."},
+  CD:{name:"Konžská demokratická republika", capital:"Kinshasa", area:"2 344 858 km² (2. největší stát Afriky)", population:"≈ 102 mil.", currency:"konžský frank", language:"francouzština", eu:"", fact:"Protéká jí řeka Kongo — druhá nejvodnatější řeka světa po Amazonce."},
+  CI:{name:"Pobřeží slonoviny", capital:"Yamoussoukro", area:"322 463 km²", population:"≈ 29 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Jeden z největších světových producentů kakaa."},
+  DJ:{name:"Džibutsko", capital:"Djibouti", area:"23 200 km²", population:"≈ 1,1 mil.", currency:"džibutský frank", language:"arabština, francouzština", eu:"", fact:"Leží u úžiny Bab-el-Mandeb, klíčové pro světovou lodní dopravu k Rudému moři."},
+  EG:{name:"Egypt", capital:"Káhira", area:"1 002 450 km²", population:"≈ 112 mil.", currency:"egyptská libra", language:"arabština", eu:"", fact:"Domov pyramid v Gíze a řeky Nil, nejdelší řeky světa."},
+  GQ:{name:"Rovníková Guinea", capital:"Malabo", area:"28 051 km²", population:"≈ 1,7 mil.", currency:"CFA frank", language:"španělština, francouzština", eu:"", fact:"Jediná africká země s úředním jazykem španělštinou."},
+  ER:{name:"Eritrea", capital:"Asmara", area:"117 600 km²", population:"≈ 3,7 mil.", currency:"nakfa", language:"tigrinština, arabština", eu:"", fact:"Hlavní město Asmara je proslulé italskou koloniální architekturou z 30. let."},
+  SZ:{name:"Eswatini", capital:"Mbabane", area:"17 364 km²", population:"≈ 1,2 mil.", currency:"lilangeni", language:"angličtina, svazijština", eu:"", fact:"Jedna z posledních absolutních monarchií na světě, dříve zvaná Svazijsko."},
+  ET:{name:"Etiopie", capital:"Addis Abeba", area:"1 104 300 km²", population:"≈ 126 mil.", currency:"etiopský birr", language:"amharština", eu:"", fact:"Jediná africká země, která si téměř celou historii uchovala nezávislost bez kolonizace."},
+  GA:{name:"Gabon", capital:"Libreville", area:"267 668 km²", population:"≈ 2,4 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Přes 80 % území pokrývá hustý deštný prales."},
+  GM:{name:"Gambie", capital:"Banjul", area:"11 295 km²", population:"≈ 2,7 mil.", currency:"dalasi", language:"angličtina", eu:"", fact:"Nejmenší stát pevninské Afriky — úzký pruh země podél řeky Gambie."},
+  GH:{name:"Ghana", capital:"Accra", area:"238 533 km²", population:"≈ 34 mil.", currency:"cedi", language:"angličtina", eu:"", fact:"První subsaharská africká kolonie, která v roce 1957 získala nezávislost."},
+  GN:{name:"Guinea", capital:"Conakry", area:"245 857 km²", population:"≈ 14 mil.", currency:"guinejský frank", language:"francouzština", eu:"", fact:"Bohatá na bauxit — patří k největším producentům na světě."},
+  GW:{name:"Guinea-Bissau", capital:"Bissau", area:"36 125 km²", population:"≈ 2,1 mil.", currency:"CFA frank", language:"portugalština", eu:"", fact:"Tvoří ji i souostroví Bijagós s bohatou přírodou v Atlantiku."},
+  KE:{name:"Keňa", capital:"Nairobi", area:"580 367 km²", population:"≈ 55 mil.", currency:"keňský šilink", language:"svahilština, angličtina", eu:"", fact:"Proslulá safari a národními parky plnými slonů, lvů a žiraf."},
+  LS:{name:"Lesotho", capital:"Maseru", area:"30 355 km²", population:"≈ 2,3 mil.", currency:"loti", language:"sesotho, angličtina", eu:"", fact:"Celý stát leží výše než 1 000 m n. m. a je zcela obklopený Jihoafrickou republikou."},
+  LR:{name:"Libérie", capital:"Monrovia", area:"111 369 km²", population:"≈ 5,4 mil.", currency:"liberijský dolar", language:"angličtina", eu:"", fact:"Založena v 19. století osvobozenými otroky z USA — hlavní město nese jméno prezidenta Monroea."},
+  LY:{name:"Libye", capital:"Tripolis", area:"1 759 540 km²", population:"≈ 6,9 mil.", currency:"libyjský dinár", language:"arabština", eu:"", fact:"Většinu území tvoří Sahara; má jedny z největších ropných zásob Afriky."},
+  MG:{name:"Madagaskar", capital:"Antananarivo", area:"587 041 km²", population:"≈ 30 mil.", currency:"ariary", language:"malgaština, francouzština", eu:"", fact:"Čtvrtý největší ostrov světa, domov lemurů a druhů, které nikde jinde nežijí."},
+  MW:{name:"Malawi", capital:"Lilongwe", area:"118 484 km²", population:"≈ 20 mil.", currency:"malawijská kwacha", language:"angličtina, čičevština", eu:"", fact:"Velkou část hranice tvoří jezero Malawi, třetí největší jezero Afriky."},
+  ML:{name:"Mali", capital:"Bamako", area:"1 240 192 km²", population:"≈ 23 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Domov starobylého města Timbuktu, kdysi centra obchodu a vzdělanosti."},
+  MR:{name:"Mauritánie", capital:"Nouakchott", area:"1 030 700 km²", population:"≈ 4,9 mil.", currency:"ouguiya", language:"arabština", eu:"", fact:"Většinu území pokrývá Sahara; poslední africká země, která zrušila otroctví (1981)."},
+  MU:{name:"Mauricius", capital:"Port Louis", area:"2 040 km²", population:"≈ 1,3 mil.", currency:"mauricijská rupie", language:"angličtina, francouzština", eu:"", fact:"Ostrov v Indickém oceánu, kde kdysi žil a vyhynul pták dodo."},
+  MA:{name:"Maroko", capital:"Rabat", area:"446 550 km²", population:"≈ 38 mil.", currency:"marocký dirham", language:"arabština, berberština", eu:"", fact:"Pohoří Atlas a poušť Sahara se tu potkávají jen pár hodin jízdy od sebe."},
+  MZ:{name:"Mosambik", capital:"Maputo", area:"801 590 km²", population:"≈ 33 mil.", currency:"mosambický metical", language:"portugalština", eu:"", fact:"Má dlouhé pobřeží Indického oceánu proslulé korálovými útesy."},
+  NA:{name:"Namibie", capital:"Windhoek", area:"825 615 km²", population:"≈ 2,6 mil.", currency:"namibijský dolar", language:"angličtina", eu:"", fact:"Domov pouště Namib, jedné z nejstarších pouští světa s obřími rudými dunami."},
+  NE:{name:"Niger", capital:"Niamey", area:"1 267 000 km²", population:"≈ 26 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Přes 80 % území zabírá Sahara; pojmenován podle řeky Niger."},
+  NG:{name:"Nigérie", capital:"Abuja", area:"923 768 km²", population:"≈ 220 mil. (nejlidnatější stát Afriky)", currency:"naira", language:"angličtina", eu:"", fact:"Domov Nollywoodu — druhého největšího filmového průmyslu světa po Bollywoodu."},
+  RW:{name:"Rwanda", capital:"Kigali", area:"26 338 km²", population:"≈ 14 mil.", currency:"rwandský frank", language:"kinyarwandština, angličtina, francouzština", eu:"", fact:"Přezdívá se jí „země tisíce kopců“; patří k nejčistším a nejbezpečnějším zemím Afriky."},
+  ST:{name:"Svatý Tomáš a Princův ostrov", capital:"São Tomé", area:"964 km²", population:"≈ 220 tisíc", currency:"dobra", language:"portugalština", eu:"", fact:"Druhý nejmenší africký stát, sopečné ostrovy u rovníku."},
+  SN:{name:"Senegal", capital:"Dakar", area:"196 722 km²", population:"≈ 18 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Dakar je nejzápadnějším velkým městem afrického kontinentu."},
+  SC:{name:"Seychely", capital:"Victoria", area:"459 km²", population:"≈ 100 tisíc", currency:"seychelská rupie", language:"francouzština, angličtina, seychelská kreolština", eu:"", fact:"Nejméně lidnatý stát Afriky — 115 ostrovů v Indickém oceánu."},
+  SL:{name:"Sierra Leone", capital:"Freetown", area:"71 740 km²", population:"≈ 8,6 mil.", currency:"leone", language:"angličtina", eu:"", fact:"Založena jako útočiště pro osvobozené otroky, odtud i název hlavního města Freetown."},
+  SO:{name:"Somálsko", capital:"Mogadišo", area:"637 657 km²", population:"≈ 18 mil.", currency:"somálský šilink", language:"somálština, arabština", eu:"", fact:"Má nejdelší pobřeží ze všech pevninských afrických států."},
+  ZA:{name:"Jihoafrická republika", capital:"Pretoria / Kapské Město / Bloemfontein", area:"1 221 037 km²", population:"≈ 60 mil.", currency:"jihoafrický rand", language:"11 úředních jazyků (mj. angličtina, zulština)", eu:"", fact:"Jediný stát světa se třemi hlavními městy — pro různé části vlády."},
+  SS:{name:"Jižní Súdán", capital:"Juba", area:"644 329 km²", population:"≈ 11 mil.", currency:"jihosúdánská libra", language:"angličtina", eu:"", fact:"Nejmladší stát světa — vznikl rozdělením Súdánu v roce 2011."},
+  SD:{name:"Súdán", capital:"Chartúm", area:"1 861 484 km²", population:"≈ 48 mil.", currency:"súdánská libra", language:"arabština, angličtina", eu:"", fact:"Protéká jím soutok Bílého a Modrého Nilu přímo v hlavním městě."},
+  TZ:{name:"Tanzanie", capital:"Dodoma", area:"947 303 km²", population:"≈ 67 mil.", currency:"tanzanský šilink", language:"svahilština, angličtina", eu:"", fact:"Najdeš tu Kilimandžáro — nejvyšší horu Afriky (5 895 m)."},
+  TG:{name:"Togo", capital:"Lomé", area:"56 785 km²", population:"≈ 8,8 mil.", currency:"CFA frank", language:"francouzština", eu:"", fact:"Úzký a dlouhý stát táhnoucí se od pobřeží hluboko do vnitrozemí."},
+  TN:{name:"Tunisko", capital:"Tunis", area:"163 610 km²", population:"≈ 12,3 mil.", currency:"tuniský dinár", language:"arabština", eu:"", fact:"Nejsevernější stát Afriky, blízko starověkého Kartága."},
+  UG:{name:"Uganda", capital:"Kampala", area:"241 038 km²", population:"≈ 48 mil.", currency:"ugandský šilink", language:"angličtina, svahilština", eu:"", fact:"Odsud pramení Nil z Viktoriina jezera — jednoho z Velkých afrických jezer."},
+  ZM:{name:"Zambie", capital:"Lusaka", area:"752 618 km²", population:"≈ 20 mil.", currency:"zambijská kwacha", language:"angličtina", eu:"", fact:"Na hranici se Zimbabwe leží vodopády Viktoriiny, jedny z největších na světě."},
+  ZW:{name:"Zimbabwe", capital:"Harare", area:"390 757 km²", population:"≈ 16 mil.", currency:"zimbabwský dolar / americký dolar", language:"angličtina, šona", eu:"", fact:"Název pochází ze starých kamenných staveb Velké Zimbabwe."}
+};
+
+const NUM2A2 = {"012":"DZ","024":"AO","204":"BJ","072":"BW","854":"BF","108":"BI","132":"CV","120":"CM","140":"CF","148":"TD","174":"KM","178":"CG","180":"CD","384":"CI","262":"DJ","818":"EG","226":"GQ","232":"ER","748":"SZ","231":"ET","266":"GA","270":"GM","288":"GH","324":"GN","624":"GW","404":"KE","426":"LS","430":"LR","434":"LY","450":"MG","454":"MW","466":"ML","478":"MR","480":"MU","504":"MA","508":"MZ","516":"NA","562":"NE","566":"NG","646":"RW","678":"ST","686":"SN","690":"SC","694":"SL","706":"SO","710":"ZA","728":"SS","729":"SD","834":"TZ","768":"TG","788":"TN","800":"UG","894":"ZM","716":"ZW"};
+function resolveAlpha(id){ return NUM2A2[String(id)] || NUM2A2[String(id).padStart(3,"0")] || null; }
+
+const svgEl = d3.select("#map");
+const proj = d3.geoMercator().center([20,2]).scale(340).translate([500,420]);
+const pathGen = d3.geoPath().projection(proj);
+let activeEl = null;
+
+async function loadMap(){
+  try{
+    const res = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
+    const world = await res.json();
+    const features = topojson.feature(world, world.objects.countries).features;
+    document.getElementById("loadingText").remove();
+
+    features.forEach(f=>{
+      const alpha = resolveAlpha(f.id);
+      const info = alpha ? countries[alpha] : null;
+      const path = svgEl.append("path")
+        .datum(f)
+        .attr("d", pathGen)
+        .attr("class", info ? "country" : "country other");
+      if(info){
+        path.attr("id","c_"+alpha).on("click", ()=>selectCountry(alpha, path.node()));
+      }
+    });
+  }catch(e){
+    document.getElementById("loadingText").textContent = "Mapu se nepodařilo načíst. Zkontrolujte připojení k internetu.";
+  }
+}
+loadMap();
+
+function selectCountry(alpha, el){
+  if(activeEl) activeEl.classList.remove("active");
+  el.classList.add("active");
+  activeEl = el;
+
+  const c = countries[alpha];
+  document.getElementById("panelEmpty").style.display = "none";
+  const content = document.getElementById("panelContent");
+  content.style.display = "block";
+  content.innerHTML = `
+    <p class="region-eyebrow">Stát</p>
+    <h2 class="region-title">${c.name}</h2>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Hlavní město</div><div class="v">${c.capital}</div></div>
+      <div class="stat"><div class="k">Rozloha</div><div class="v">${c.area}</div></div>
+      <div class="stat"><div class="k">Obyvatelé</div><div class="v">${c.population}</div></div>
+      <div class="stat"><div class="k">Měna</div><div class="v">${c.currency}</div></div>
+    </div>
+
+    <div class="section"><h3>Jazyk</h3><p>${c.language}</p></div>
+    <div class="funfact">${c.fact}</div>
+  `;
+}
+</script>
+</body>
+</html>

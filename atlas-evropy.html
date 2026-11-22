@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Atlas Evropy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --parchment:#EFE6D2; --parchment-dark:#E4D8BC; --ink:#2B2418; --ink-soft:#5B5240;
+    --forest:#3C5B45; --forest-dark:#2A4232; --rust:#B5533C; --gold:#B08A32; --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%), var(--parchment);
+    color:var(--ink); font-family:'Source Sans 3', sans-serif; min-height:100vh;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; padding:24px 20px 50px; }
+  header{ border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:700; font-size:clamp(24px,4vw,36px); margin:0 0 4px; color:var(--forest-dark); }
+  h1 span{ color:var(--rust); }
+  .subtitle{ margin:0; font-size:14.5px; color:var(--ink-soft); font-style:italic; }
+
+  .layout{ display:grid; grid-template-columns:minmax(320px,660px) minmax(300px,1fr); gap:24px; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .map-card{ background:rgba(255,255,255,0.35); border:1px solid var(--line); border-radius:6px; padding:14px; position:relative; }
+  #map{ width:100%; height:auto; display:block; background:#DCE7E0; border-radius:4px; }
+  .country{ stroke:var(--parchment); stroke-width:1.1; cursor:pointer; transition:fill .12s; fill:var(--forest); }
+  .country:hover{ fill:#4E7157; }
+  .country.active{ fill:var(--rust); }
+  .country.other{ fill:#C9C2AD; stroke:var(--parchment); stroke-width:0.8; pointer-events:none; }
+  .legend{ margin-top:8px; font-size:12px; text-align:center; color:var(--ink-soft); }
+
+  .panel{ background:#FBF7EC; border:1px solid var(--line); border-radius:6px; padding:26px 26px 22px; min-height:480px; }
+  .panel-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:100%; min-height:430px; color:var(--ink-soft); }
+  .panel-empty svg{ width:60px; height:60px; margin-bottom:14px; opacity:0.5; }
+  .panel-empty p{ max-width:280px; line-height:1.5; }
+
+  .region-eyebrow{ font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin:0 0 4px; }
+  .region-title{ font-family:'Fraunces', serif; font-weight:700; font-size:28px; margin:0 0 16px; color:var(--forest-dark); }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:2px; }
+  .stat .v{ font-size:15px; font-weight:600; color:var(--ink); }
+
+  .section{ margin-bottom:14px; }
+  .section h3{ font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; color:var(--forest-dark); margin:0 0 5px; display:flex; align-items:center; gap:7px; }
+  .section h3::before{ content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block; }
+  .section p{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0; }
+  .funfact{ background:var(--parchment-dark); border-left:3px solid var(--rust); padding:12px 14px; border-radius:0 4px 4px 0; font-size:14px; font-style:italic; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atlas <span>Evropy</span></h1>
+    <p class="subtitle">Klikni na stát v mapě a zobrazí se jeho základní informace.</p>
+  </header>
+
+  <div class="layout">
+    <div class="map-card">
+      <svg id="map" viewBox="0 0 1000 780" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <text x="500" y="390" text-anchor="middle" fill="#5B5240" font-family="sans-serif" font-size="16" id="loadingText">Načítám mapu…</text>
+      </svg>
+      <p class="legend">41 evropských států · klikni pro informace</p>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="panel-empty" id="panelEmpty">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#5B5240" stroke-width="2">
+          <circle cx="32" cy="32" r="26"/>
+          <path d="M8 32h48M32 8c8 8 8 40 0 48M32 8c-8 8-8 40 0 48"/>
+        </svg>
+        <p>Vyber stát kliknutím na mapě vlevo a zobrazí se hlavní město, rozloha, obyvatelstvo, měna, jazyk i zajímavost.</p>
+      </div>
+      <div id="panelContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const countries = {
+  AL:{name:"Albánie", capital:"Tirana", area:"28 748 km²", population:"≈ 2,8 mil.", currency:"lek", language:"albánština", eu:"Ne (kandidátská země)", fact:"Většinu území pokrývají hory — Albánii se přezdívá „země orlů“."},
+  AT:{name:"Rakousko", capital:"Vídeň", area:"83 879 km²", population:"≈ 9,1 mil.", currency:"euro", language:"němčina", eu:"Ano", fact:"Alpy zabírají většinu území — lyžování a horská turistika patří k národním zálibám."},
+  BY:{name:"Bělorusko", capital:"Minsk", area:"207 600 km²", population:"≈ 9,2 mil.", currency:"běloruský rubl", language:"běloruština, ruština", eu:"Ne", fact:"Velkou část země pokrývají lesy a rozsáhlá rašeliniště."},
+  BE:{name:"Belgie", capital:"Brusel", area:"30 528 km²", population:"≈ 11,7 mil.", currency:"euro", language:"nizozemština, francouzština, němčina", eu:"Ano — sídlí zde instituce EU", fact:"V Bruselu sídlí Evropská unie i NATO. Belgie je proslulá čokoládou a vaflemi."},
+  BA:{name:"Bosna a Hercegovina", capital:"Sarajevo", area:"51 209 km²", population:"≈ 3,2 mil.", currency:"konvertibilní marka", language:"bosenština, chorvatština, srbština", eu:"Ne (kandidátská země)", fact:"V Sarajevu roku 1914 atentát na následníka trůnu odstartoval 1. světovou válku."},
+  BG:{name:"Bulharsko", capital:"Sofie", area:"110 879 km²", population:"≈ 6,4 mil.", currency:"lev", language:"bulharština", eu:"Ano", fact:"Pohoří Balkán, které se táhne zemí, dalo jméno celému Balkánskému poloostrovu."},
+  HR:{name:"Chorvatsko", capital:"Záhřeb", area:"56 594 km²", population:"≈ 3,9 mil.", currency:"euro", language:"chorvatština", eu:"Ano", fact:"Podél pobřeží Jaderského moře leží přes tisíc ostrovů — oblíbená destinace českých turistů."},
+  CY:{name:"Kypr", capital:"Nikósie", area:"9 251 km²", population:"≈ 1,2 mil.", currency:"euro", language:"řečtina, turečtina", eu:"Ano", fact:"Ostrov je fakticky rozdělený na řeckou a tureckou část."},
+  CZ:{name:"Česko", capital:"Praha", area:"78 871 km²", population:"≈ 10,9 mil.", currency:"koruna", language:"čeština", eu:"Ano", fact:"Naše vlast — leží uprostřed Evropy a nemá přímý přístup k moři."},
+  DK:{name:"Dánsko", capital:"Kodaň", area:"42 933 km²", population:"≈ 5,9 mil.", currency:"dánská koruna", language:"dánština", eu:"Ano", fact:"K Dánsku patří Grónsko — největší ostrov na světě."},
+  EE:{name:"Estonsko", capital:"Tallinn", area:"45 227 km²", population:"≈ 1,3 mil.", currency:"euro", language:"estonština", eu:"Ano", fact:"Patří k nejvíce digitalizovaným zemím světa — skoro vše se dá vyřídit online."},
+  FI:{name:"Finsko", capital:"Helsinky", area:"338 424 km²", population:"≈ 5,6 mil.", currency:"euro", language:"finština, švédština", eu:"Ano", fact:"Země tisíců jezer, kde je v zimě na severu vidět polární záře."},
+  FR:{name:"Francie", capital:"Paříž", area:"551 695 km²", population:"≈ 68 mil.", currency:"euro", language:"francouzština", eu:"Ano", fact:"Nejnavštěvovanější země světa — symbolem je Eiffelova věž v Paříži."},
+  DE:{name:"Německo", capital:"Berlín", area:"357 588 km²", population:"≈ 84 mil.", currency:"euro", language:"němčina", eu:"Ano", fact:"Největší ekonomika Evropy a náš největší obchodní partner."},
+  GR:{name:"Řecko", capital:"Atény", area:"131 957 km²", population:"≈ 10,4 mil.", currency:"euro", language:"řečtina", eu:"Ano", fact:"Kolébka demokracie a olympijských her — tisíce ostrovů v Egejském a Jónském moři."},
+  HU:{name:"Maďarsko", capital:"Budapešť", area:"93 028 km²", population:"≈ 9,6 mil.", currency:"forint", language:"maďarština", eu:"Ano", fact:"Maďarština patří k uralským jazykům a vůbec nepřipomíná řeč sousedů."},
+  IS:{name:"Island", capital:"Reykjavík", area:"103 000 km²", population:"≈ 390 tisíc", currency:"islandská koruna", language:"islandština", eu:"Ne", fact:"Ostrov sopek, gejzírů a horkých pramenů uprostřed Atlantiku."},
+  IE:{name:"Irsko", capital:"Dublin", area:"70 273 km²", population:"≈ 5,1 mil.", currency:"euro", language:"irština, angličtina", eu:"Ano", fact:"„Smaragdový ostrov“ — pojmenovaný podle sytě zelených luk."},
+  IT:{name:"Itálie", capital:"Řím", area:"301 340 km²", population:"≈ 59 mil.", currency:"euro", language:"italština", eu:"Ano", fact:"Tvarem připomíná botu; kolébka starověkého Říma i renesance."},
+  LV:{name:"Lotyšsko", capital:"Riga", area:"64 589 km²", population:"≈ 1,9 mil.", currency:"euro", language:"lotyština", eu:"Ano", fact:"Jedna ze tří pobaltských zemí u Baltského moře."},
+  LT:{name:"Litva", capital:"Vilnius", area:"65 300 km²", population:"≈ 2,8 mil.", currency:"euro", language:"litevština", eu:"Ano", fact:"Litevština patří k nejstarším dosud živým indoevropským jazykům."},
+  LU:{name:"Lucembursko", capital:"Lucemburk", area:"2 586 km²", population:"≈ 660 tisíc", currency:"euro", language:"lucemburština, francouzština, němčina", eu:"Ano", fact:"Jeden z nejmenších, ale nejbohatších států světa."},
+  MT:{name:"Malta", capital:"Valletta", area:"316 km²", population:"≈ 530 tisíc", currency:"euro", language:"maltština, angličtina", eu:"Ano", fact:"Jeden z nejmenších a nejhustěji obydlených států EU."},
+  MD:{name:"Moldavsko", capital:"Kišiněv", area:"33 851 km²", population:"≈ 2,5 mil.", currency:"moldavské leu", language:"rumunština", eu:"Ne (kandidátská země)", fact:"Patří k předním vinařským zemím východní Evropy."},
+  ME:{name:"Černá Hora", capital:"Podgorica", area:"13 812 km²", population:"≈ 620 tisíc", currency:"euro (bez členství v EU)", language:"černohorština", eu:"Ne (kandidátská země)", fact:"Kaňon řeky Tara je druhý nejhlubší na světě."},
+  MK:{name:"Severní Makedonie", capital:"Skopje", area:"25 713 km²", population:"≈ 1,8 mil.", currency:"denár", language:"makedonština", eu:"Ne (kandidátská země)", fact:"Kvůli sporu s Řeckem si přidala do názvu slovo „Severní“."},
+  NL:{name:"Nizozemsko", capital:"Amsterdam", area:"41 850 km²", population:"≈ 17,9 mil.", currency:"euro", language:"nizozemština", eu:"Ano", fact:"Čtvrtina území leží pod úrovní moře. Proslulé tulipány a větrné mlýny."},
+  NO:{name:"Norsko", capital:"Oslo", area:"323 802 km²", population:"≈ 5,5 mil.", currency:"norská koruna", language:"norština", eu:"Ne", fact:"Proslulé hlubokými fjordy a polární září na severu země."},
+  PL:{name:"Polsko", capital:"Varšava", area:"312 696 km²", population:"≈ 37 mil.", currency:"zlotý", language:"polština", eu:"Ano", fact:"Nejlidnatější stát střední Evropy a náš severní soused."},
+  PT:{name:"Portugalsko", capital:"Lisabon", area:"92 212 km²", population:"≈ 10,3 mil.", currency:"euro", language:"portugalština", eu:"Ano", fact:"Nejzápadnější stát pevninské Evropy."},
+  RO:{name:"Rumunsko", capital:"Bukurešť", area:"238 397 km²", population:"≈ 19 mil.", currency:"rumunské leu", language:"rumunština", eu:"Ano", fact:"Hory Transylvánie jsou spojené s pověstmi o Drákulovi."},
+  RU:{name:"Rusko", capital:"Moskva", area:"17 098 246 km² (největší stát světa)", population:"≈ 144 mil.", currency:"ruský rubl", language:"ruština", eu:"Ne", fact:"Rozkládá se přes 11 časových pásem napříč Evropou i Asií."},
+  RS:{name:"Srbsko", capital:"Bělehrad", area:"88 361 km²", population:"≈ 6,6 mil.", currency:"srbský dinár", language:"srbština", eu:"Ne (kandidátská země)", fact:"Bělehrad leží na soutoku řek Sávy a Dunaje."},
+  SK:{name:"Slovensko", capital:"Bratislava", area:"49 035 km²", population:"≈ 5,4 mil.", currency:"euro", language:"slovenština", eu:"Ano", fact:"Do roku 1993 tvořilo s Českem společný stát Československo."},
+  SI:{name:"Slovinsko", capital:"Lublaň", area:"20 273 km²", population:"≈ 2,1 mil.", currency:"euro", language:"slovinština", eu:"Ano", fact:"K moři má přístup jen na krátkém úseku pobřeží u Terstského zálivu."},
+  ES:{name:"Španělsko", capital:"Madrid", area:"505 990 km²", population:"≈ 48 mil.", currency:"euro", language:"španělština", eu:"Ano", fact:"Druhá nejnavštěvovanější země světa po Francii."},
+  SE:{name:"Švédsko", capital:"Stockholm", area:"450 295 km²", population:"≈ 10,5 mil.", currency:"švédská koruna", language:"švédština", eu:"Ano", fact:"Vlast nábytkářské firmy IKEA a hudební skupiny ABBA."},
+  CH:{name:"Švýcarsko", capital:"Bern", area:"41 285 km²", population:"≈ 8,8 mil.", currency:"švýcarský frank", language:"němčina, francouzština, italština, rétorománština", eu:"Ne", fact:"Má čtyři úřední jazyky a je proslulé hodinářstvím a čokoládou."},
+  TR:{name:"Turecko", capital:"Ankara", area:"783 562 km²", population:"≈ 85 mil.", currency:"turecká lira", language:"turečtina", eu:"Ne (kandidátská země)", fact:"Leží na dvou kontinentech zároveň — v Evropě i Asii."},
+  UA:{name:"Ukrajina", capital:"Kyjev", area:"603 628 km² (největší stát celý v Evropě)", population:"≈ 37 mil. (odhad)", currency:"hřivna", language:"ukrajinština", eu:"Ne (kandidátská země)", fact:"Úrodná černozem jí vynesla přezdívku „obilnice Evropy“."},
+  GB:{name:"Velká Británie", capital:"Londýn", area:"243 610 km²", population:"≈ 68 mil.", currency:"britská libra", language:"angličtina", eu:"Ne — vystoupila v roce 2020 (brexit)", fact:"Tvoří ji čtyři země: Anglie, Skotsko, Wales a Severní Irsko."}
+};
+
+const NUM2A2 = {"100":"BG","112":"BY","191":"HR","196":"CY","203":"CZ","208":"DK","233":"EE","246":"FI","250":"FR","276":"DE","300":"GR","348":"HU","352":"IS","372":"IE","380":"IT","428":"LV","440":"LT","442":"LU","470":"MT","498":"MD","499":"ME","528":"NL","578":"NO","616":"PL","620":"PT","642":"RO","643":"RU","688":"RS","703":"SK","705":"SI","724":"ES","752":"SE","756":"CH","792":"TR","804":"UA","807":"MK","826":"GB","008":"AL","040":"AT","056":"BE","070":"BA"};
+function resolveAlpha(id){ return NUM2A2[String(id)] || NUM2A2[String(id).padStart(3,"0")] || null; }
+const SKIP_IDS = new Set(["744","304","010"]);
+
+const svgEl = d3.select("#map");
+const proj = d3.geoMercator().center([16,53]).scale(760).translate([500,390]);
+const pathGen = d3.geoPath().projection(proj);
+let activeEl = null;
+
+async function loadMap(){
+  try{
+    const res = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
+    const world = await res.json();
+    const features = topojson.feature(world, world.objects.countries).features;
+    document.getElementById("loadingText").remove();
+
+    features.forEach(f=>{
+      if(SKIP_IDS.has(String(f.id))) return;
+      const alpha = resolveAlpha(f.id);
+      const info = alpha ? countries[alpha] : null;
+      const path = svgEl.append("path")
+        .datum(f)
+        .attr("d", pathGen)
+        .attr("class", info ? "country" : "country other");
+      if(info){
+        path.attr("id","c_"+alpha).on("click", ()=>selectCountry(alpha, path.node()));
+      }
+    });
+  }catch(e){
+    document.getElementById("loadingText").textContent = "Mapu se nepodařilo načíst. Zkontrolujte připojení k internetu.";
+  }
+}
+loadMap();
+
+function selectCountry(alpha, el){
+  if(activeEl) activeEl.classList.remove("active");
+  el.classList.add("active");
+  activeEl = el;
+
+  const c = countries[alpha];
+  document.getElementById("panelEmpty").style.display = "none";
+  const content = document.getElementById("panelContent");
+  content.style.display = "block";
+  content.innerHTML = `
+    <p class="region-eyebrow">Stát</p>
+    <h2 class="region-title">${c.name}</h2>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Hlavní město</div><div class="v">${c.capital}</div></div>
+      <div class="stat"><div class="k">Rozloha</div><div class="v">${c.area}</div></div>
+      <div class="stat"><div class="k">Obyvatelé</div><div class="v">${c.population}</div></div>
+      <div class="stat"><div class="k">Měna</div><div class="v">${c.currency}</div></div>
+    </div>
+
+    <div class="section"><h3>Jazyk</h3><p>${c.language}</p></div>
+    <div class="section"><h3>Členství v EU</h3><p>${c.eu}</p></div>
+    <div class="funfact">${c.fact}</div>
+  `;
+}
+</script>
+</body>
+</html>

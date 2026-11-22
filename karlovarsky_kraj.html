@@ -1,0 +1,348 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Karlovarský kraj</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,800;1,6..96,500&family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one long "výprava" down the page — pramen → čísla → města → hory → voda → průmysl → kvíz. Porcelain ground, cobalt + spring teal, sinter ochre as the single hot accent. */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --fg:#15232b; --muted:#56666f; --line:#d5dfe3;
+  --cobalt:#1f4fa3; --spring:#0f8a83; --sinter:#c86b1e; --forest:#2f5a3a; --water:#2a7fb8;
+  --display:"Bodoni Moda", "Didot", Georgia, serif;
+  --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1619; --surface:#162227; --fg:#e7eef0; --muted:#9db0b8; --line:#2a3a41;
+  --cobalt:#7aa3f0; --spring:#3fc7bd; --sinter:#f0a35a; --forest:#7fbf8c; --water:#6bb6e8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1619; --surface:#162227; --fg:#e7eef0; --muted:#9db0b8; --line:#2a3a41;
+  --cobalt:#7aa3f0; --spring:#3fc7bd; --sinter:#f0a35a; --forest:#7fbf8c; --water:#6bb6e8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:800;text-wrap:balance;line-height:1.05;margin:0}
+h2{font-size:clamp(2rem,5vw,3.2rem)}
+h3{font-size:1.35rem;font-weight:500}
+p{margin:0;max-width:65ch}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--spring)}
+section{padding-block:72px;border-top:1px solid var(--line);display:grid;gap:28px}
+.lede{color:var(--muted);font-size:1.08rem}
+.num{font-variant-numeric:tabular-nums}
+
+/* HERO */
+.hero{padding-block:56px 64px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(3rem,10vw,6.6rem);letter-spacing:-.02em}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--sinter)}
+.hero p{margin-top:20px;font-size:1.15rem}
+.spring{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:200px 200px 16px 16px;overflow:hidden;
+  background:linear-gradient(180deg,transparent 0%,color-mix(in srgb,var(--spring) 22%,transparent) 100%);border:1px solid var(--line)}
+.spring .temp{position:absolute;inset:auto 0 22% 0;text-align:center;font-family:var(--display);font-size:clamp(3.4rem,9vw,5.2rem);font-weight:800;color:var(--sinter)}
+.spring .cap{position:absolute;inset:auto 0 10% 0;text-align:center;font-family:var(--mono);font-size:.78rem;color:var(--muted);letter-spacing:.08em}
+.bub{position:absolute;bottom:-20px;border-radius:50%;border:2px solid var(--spring);opacity:.55;animation:rise linear infinite}
+@keyframes rise{to{transform:translateY(-520px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.bub{animation:none;display:none}}
+
+/* FACT STRIP */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fact{background:var(--bg);padding:22px 20px;display:grid;gap:4px;align-content:start}
+.fact b{font-family:var(--display);font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;line-height:1}
+.fact span{color:var(--muted);font-size:.92rem}
+.compare{font-size:.95rem;color:var(--muted)}
+.compare strong{color:var(--fg)}
+
+/* CAPITAL */
+.capital{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.capital .badge{display:inline-flex;gap:8px;align-items:center;font-family:var(--mono);font-size:.78rem;padding:6px 12px;border-radius:99px;
+  border:1px solid var(--cobalt);color:var(--cobalt)}
+.list{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.list li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start}
+.list li i{font-style:normal;font-family:var(--mono);font-size:.8rem;color:var(--sinter);padding-top:4px}
+
+/* TOWNS */
+.towns{display:grid;gap:18px}
+.town{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:center}
+.town .name{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.town .name small{display:block;font-family:var(--body);font-size:.85rem;font-weight:400;color:var(--muted)}
+.bar{height:46px;border-radius:6px;background:var(--cobalt);display:flex;align-items:center;justify-content:flex-end;padding-right:12px;
+  color:#fff;font-family:var(--mono);font-size:.9rem;min-width:0;transform-origin:left;animation:grow 1s ease-out both}
+.bar.c2{background:var(--spring)} .bar.c3{background:var(--sinter)}
+@keyframes grow{from{transform:scaleX(.15)}}
+@media (prefers-reduced-motion:reduce){.bar{animation:none}}
+.town p{grid-column:2;color:var(--muted);font-size:.95rem;margin-top:-8px}
+
+/* MOUNTAINS */
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto}
+.peaks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.peak{display:grid;gap:4px}
+.peak b{font-family:var(--display);font-size:1.2rem}
+.peak span{color:var(--muted);font-size:.93rem}
+
+/* WATER */
+.water{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start}
+.river{border-left:3px solid var(--water);padding-left:18px;display:grid;gap:18px}
+.river div b{font-family:var(--display);font-size:1.25rem;color:var(--water)}
+.river div p{color:var(--muted);font-size:.95rem}
+.callout{background:color-mix(in srgb,var(--water) 10%,var(--bg));border:1px solid color-mix(in srgb,var(--water) 35%,transparent);border-radius:14px;padding:22px;display:grid;gap:10px}
+.callout b{font-family:var(--display);font-size:1.4rem}
+
+/* INDUSTRY */
+.industry{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ind{border-top:3px solid var(--fg);padding-top:14px;display:grid;gap:8px;align-content:start}
+.ind .yr{font-family:var(--mono);font-size:.78rem;color:var(--sinter)}
+.ind p{color:var(--muted);font-size:.95rem}
+.ind.coal{border-color:var(--muted)}
+
+/* DOLLAR */
+.dollar{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;background:var(--fg);color:var(--bg);border-radius:18px;padding:32px}
+.dollar .coin{width:110px;height:110px;border-radius:50%;border:3px solid var(--sinter);display:grid;place-items:center;font-family:var(--display);font-size:2.6rem;color:var(--sinter);font-weight:800}
+.dollar p{opacity:.85}
+
+/* QUIZ */
+.quiz{display:grid;gap:18px;max-width:720px}
+.q{display:grid;gap:10px}
+.q .qt{font-weight:800}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{font:inherit;font-size:.95rem;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.opts button:hover{border-color:var(--cobalt)}
+.opts button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.opts button.ok{background:var(--spring);border-color:var(--spring);color:#fff}
+.opts button.bad{border-color:var(--sinter);color:var(--sinter);text-decoration:line-through}
+.fb{font-size:.9rem;color:var(--muted);min-height:1.4em}
+.score{font-family:var(--display);font-size:1.6rem}
+footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--muted);font-size:.85rem;display:grid;gap:6px}
+footer a{color:var(--cobalt)}
+
+@media (max-width:760px){
+  .hero,.capital,.water{grid-template-columns:1fr}
+  .spring{max-width:300px;margin:0 auto;width:100%}
+  .facts{grid-template-columns:repeat(2,1fr)}
+  .industry{grid-template-columns:1fr}
+  .town{grid-template-columns:1fr;gap:6px}
+  .town p{grid-column:1;margin-top:0}
+  .dollar{grid-template-columns:1fr;padding:24px}
+  section{padding-block:52px}
+}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">Západ Čech · 50° s. š. · 12–13° v. d.</div>
+    <h1>Kraj, kde<br><em>vře země</em></h1>
+    <p>Karlovarský kraj je nejmenší kraj Česka podle počtu obyvatel. Přesto z něj pochází slavné sklo, porcelán, likér i minerálka, stojí tu tři lázně zapsané v UNESCO a ze země tu tryská voda teplá jako čaj.</p>
+  </div>
+  <div class="spring" id="spring" aria-label="Vřídlo, nejteplejší pramen v Karlových Varech">
+    <div class="temp num">72 °C</div>
+    <div class="cap">VŘÍDLO · KARLOVY VARY</div>
+  </div>
+</header>
+
+<section aria-labelledby="cisla">
+  <div class="eyebrow">01 · Kraj v číslech</div>
+  <h2 id="cisla">Malý, ale k nepřehlédnutí</h2>
+  <div class="facts">
+    <div class="fact"><b class="num">291 217</b><span>obyvatel (30. 6. 2026, ČSÚ)</span></div>
+    <div class="fact"><b class="num">3 310 km²</b><span>rozloha</span></div>
+    <div class="fact"><b class="num">134</b><span>obcí ve 3 okresech</span></div>
+    <div class="fact"><b class="num">1 244 m</b><span>nejvyšší bod: Klínovec</span></div>
+  </div>
+  <p class="compare">Pro představu: v celém kraji žije <strong>asi pětkrát méně lidí než v Praze</strong>. Rozlohou je to 4,2 % Česka. Okresy jsou tři: <strong>Karlovy Vary</strong>, <strong>Cheb</strong> a <strong>Sokolov</strong>. Počet obyvatel pomalu klesá, protože víc lidí umírá, než se rodí.</p>
+</section>
+
+<section aria-labelledby="krajske">
+  <div class="eyebrow">02 · Krajské město</div>
+  <div class="capital">
+    <div style="display:grid;gap:18px">
+      <span class="badge">★ SÍDLO KRAJE</span>
+      <h2 id="krajske">Karlovy Vary</h2>
+      <p class="lede">Podle pověsti objevil horký pramen císař Karel IV. při lovu, když jeho pes spadl do vřící vody. Město nese jeho jméno a dnes má asi 48 800 obyvatel.</p>
+    </div>
+    <ul class="list">
+      <li><i>13</i><div><strong>léčivých pramenů</strong> v centru města. Pije se z porcelánových lázeňských pohárků se zobáčkem.</div></li>
+      <li><i>2021</i><div>Zápis do UNESCO jako součást <strong>Slavných lázní Evropy</strong>, spolu s Mariánskými a Františkovými Lázněmi. Dohromady tvoří <strong>lázeňský trojúhelník</strong>.</div></li>
+      <li><i>MFF</i><div>Každé léto se tu koná <strong>Mezinárodní filmový festival</strong>, nejznámější filmová akce v Česku.</div></li>
+      <li><i>13°</i><div><strong>Becherovka</strong> se tu vyrábí od roku 1807. Recept zná jen pár lidí.</div></li>
+    </ul>
+  </div>
+</section>
+
+<section aria-labelledby="mesta">
+  <div class="eyebrow">03 · Tři největší města</div>
+  <h2 id="mesta">Kdo je tu největší</h2>
+  <p class="lede">Délka pruhu odpovídá počtu obyvatel (Wikipedie podle ČSÚ, 2026).</p>
+  <div class="towns">
+    <div class="town">
+      <div class="name">Karlovy Vary<small>krajské město</small></div>
+      <div class="bar" style="width:100%"><span class="num">48 788</span></div>
+      <p>Lázně, filmový festival, sklárna Moser, Becherovka.</p>
+    </div>
+    <div class="town">
+      <div class="name">Cheb<small>u hranic s Německem</small></div>
+      <div class="bar c2" style="width:67.4%"><span class="num">32 892</span></div>
+      <p>Středověké náměstí s hrázděným Špalíčkem a Chebský hrad, kde byl zavražděn Albrecht z Valdštejna (1634).</p>
+    </div>
+    <div class="town">
+      <div class="name">Sokolov<small>hornické město</small></div>
+      <div class="bar c3" style="width:44.9%"><span class="num">21 908</span></div>
+      <p>Centrum těžby hnědého uhlí. Kolem města vznikají z bývalých lomů nová jezera.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="hory">
+  <div class="eyebrow">04 · Pohoří</div>
+  <h2 id="hory">Kraj obklopený horami</h2>
+  <p class="lede">Výška nejvyššího vrcholu každého pohoří na území kraje. Nejníže leží kraj u Ohře, kolem 320 m n. m.</p>
+  <div class="chart">
+    <svg viewBox="0 0 640 300" role="img" aria-label="Sloupcový graf nejvyšších vrcholů pohoří">
+      <g font-family="JetBrains Mono, monospace" font-size="11" fill="var(--muted)">
+        <line x1="60" y1="250" x2="620" y2="250" stroke="var(--line)"/>
+        <line x1="60" y1="170" x2="620" y2="170" stroke="var(--line)" stroke-dasharray="3 4"/>
+        <line x1="60" y1="90" x2="620" y2="90" stroke="var(--line)" stroke-dasharray="3 4"/>
+        <text x="52" y="254" text-anchor="end">0</text>
+        <text x="52" y="174" text-anchor="end">500</text>
+        <text x="52" y="94" text-anchor="end">1000</text>
+      </g>
+      <!-- scale: 0.16 px per m, baseline 250 -->
+      <g font-family="Manrope, sans-serif" font-size="12">
+        <polygon points="70,250 125,51 180,250" fill="var(--forest)"/>
+        <text x="125" y="44" text-anchor="middle" fill="var(--fg)" font-weight="800">1 244</text>
+        <text x="125" y="270" text-anchor="middle" fill="var(--fg)">Krušné hory</text>
+        <text x="125" y="286" text-anchor="middle" fill="var(--muted)">Klínovec</text>
+
+        <polygon points="182,250 237,93 292,250" fill="var(--forest)" opacity=".85"/>
+        <text x="237" y="86" text-anchor="middle" fill="var(--fg)" font-weight="800">983</text>
+        <text x="237" y="270" text-anchor="middle" fill="var(--fg)">Slavkovský les</text>
+        <text x="237" y="286" text-anchor="middle" fill="var(--muted)">Lesný</text>
+
+        <polygon points="294,250 349,100 404,250" fill="var(--forest)" opacity=".75"/>
+        <text x="349" y="93" text-anchor="middle" fill="var(--fg)" font-weight="800">940</text>
+        <text x="349" y="270" text-anchor="middle" fill="var(--fg)">Český les</text>
+        <text x="349" y="286" text-anchor="middle" fill="var(--muted)">Dyleň</text>
+
+        <polygon points="406,250 461,101 516,250" fill="var(--forest)" opacity=".65"/>
+        <text x="461" y="94" text-anchor="middle" fill="var(--fg)" font-weight="800">934</text>
+        <text x="461" y="270" text-anchor="middle" fill="var(--fg)">Doupovské hory</text>
+        <text x="461" y="286" text-anchor="middle" fill="var(--muted)">Hradiště</text>
+
+        <polygon points="518,250 568,129 618,250" fill="var(--forest)" opacity=".55"/>
+        <text x="568" y="122" text-anchor="middle" fill="var(--fg)" font-weight="800">758</text>
+        <text x="568" y="270" text-anchor="middle" fill="var(--fg)">Smrčiny</text>
+        <text x="568" y="286" text-anchor="middle" fill="var(--muted)">Háj u Aše</text>
+      </g>
+    </svg>
+  </div>
+  <div class="peaks">
+    <div class="peak"><b>Krušné hory</b><span>Na severu, podél hranice s Německem. Klínovec je nejvyšší hora kraje i celých Krušných hor. V zimě tu lyžuje celé západní Čechy.</span></div>
+    <div class="peak"><b>Slavkovský les</b><span>Chráněná krajinná oblast mezi Karlovými Vary a Mariánskými Lázněmi. Odtud vyvěrají stovky minerálních pramenů.</span></div>
+    <div class="peak"><b>Doupovské hory</b><span>Vyhaslá sopka. Většinu zabírá vojenský újezd, takže je to jedno z nejméně dotčených míst v Česku.</span></div>
+    <div class="peak"><b>Smrčiny a Český les</b><span>Na západě u Aše a na jihu u hranic. Ve Smrčinách pramení řeka Ohře.</span></div>
+  </div>
+</section>
+
+<section aria-labelledby="voda">
+  <div class="eyebrow">05 · Vodstvo</div>
+  <h2 id="voda">Voda studená, teplá i léčivá</h2>
+  <div class="water">
+    <div class="river">
+      <div><b>Ohře</b><p>Hlavní řeka kraje. Pramení v Německu ve Smrčinách, protéká Chebem, Sokolovem a Karlovými Vary a u Litoměřic se vlévá do Labe. Měří asi 300 km.</p></div>
+      <div><b>Teplá</b><p>Teče přímo středem lázeňských Karlových Varů a v nich se vlévá do Ohře.</p></div>
+      <div><b>Rolava, Svatava, Odrava</b><p>Přítoky Ohře. Rolava a Svatava stékají z Krušných hor, Odrava teče od Chebu.</p></div>
+      <div><b>Nádrže</b><p><strong>Skalka</strong> u Chebu (na Ohři), <strong>Jesenice</strong> (na Odravě), <strong>Stanovice</strong> u Karlových Varů, která zásobuje město pitnou vodou.</p></div>
+    </div>
+    <div style="display:grid;gap:18px">
+      <div class="callout">
+        <span class="eyebrow">Nové jezero</span>
+        <b>Medard</b>
+        <p>Bývalý uhelný lom u Sokolova zatopený vodou. S rozlohou kolem 490 ha je to jedno z největších umělých jezer v Česku. Kde dřív jezdila rypadla, dnes se koupe.</p>
+      </div>
+      <div class="callout">
+        <span class="eyebrow">Minerální prameny</span>
+        <b>Stovky pramenů</b>
+        <p>Kraj je plný minerálních pramenů, jen v Mariánských Lázních jich je ve městě kolem čtyřiceti. Vřídlo v Karlových Varech vystřikuje až 12 m vysoko a má 72 °C.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="prumysl">
+  <div class="eyebrow">06 · Průmysl</div>
+  <h2 id="prumysl">Co se tu vyrábí</h2>
+  <div class="industry">
+    <div class="ind"><span class="yr">LÁZEŇSTVÍ</span><h3>Turistika a lázně</h3><p>Hlavní obor kraje. Hosté tu zůstávají nejdéle ze všech krajů v Česku.</p></div>
+    <div class="ind"><span class="yr">OD 1792</span><h3>Porcelán</h3><p>Nejstarší porcelánka v Česku je v Horním Slavkově. Známá je i firma Thun v Nové Roli.</p></div>
+    <div class="ind"><span class="yr">OD 1857</span><h3>Sklo Moser</h3><p>Ručně foukané luxusní sklo z Karlových Varů, které vlastnili králové i papežové.</p></div>
+    <div class="ind"><span class="yr">OD 1807</span><h3>Becherovka</h3><p>Bylinný likér z karlovarské vody. Jeden z nejznámějších českých exportů.</p></div>
+    <div class="ind"><span class="yr">OD 1873</span><h3>Minerální vody</h3><p>Mattoni z Kyselky a další stáčírny prodávají místní minerálky po celém světě.</p></div>
+    <div class="ind coal"><span class="yr">KONČÍ ~2030</span><h3>Hnědé uhlí</h3><p>Sokolovská uhelná těží v lomu Jiří. Těžba se utlumuje a má skončit kolem roku 2030, firma přechází na solární energii a baterie.</p></div>
+  </div>
+
+  <div class="dollar">
+    <div class="coin">$</div>
+    <div style="display:grid;gap:8px">
+      <span class="eyebrow" style="color:var(--sinter)">Věděli jste?</span>
+      <h3 style="font-size:1.6rem;font-weight:800">Dolar má jméno z Jáchymova</h3>
+      <p>V 16. století se v Jáchymově razily stříbrné mince zvané <em>jáchymovské tolary</em>. Ze slova „tolar“ vzniklo anglické <strong>dollar</strong>. Později se v Jáchymově těžil uran a dnes tu jsou první radonové lázně na světě.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="kviz">
+  <div class="eyebrow">07 · Otestuj se</div>
+  <h2 id="kviz">Rychlý kvíz</h2>
+  <div class="quiz" id="quiz"></div>
+  <div class="score num" id="score" aria-live="polite"></div>
+</section>
+
+<footer>
+  <span>Zdroje: ČSÚ – Krajská správa Karlovy Vary (počet obyvatel k 30. 6. 2026, rozloha), Wikipedie (počty obyvatel měst 2026), ČTK / Česká televize (těžba uhlí na Sokolovsku).</span>
+  <span><a href="https://csu.gov.cz/kvk/" target="_blank" rel="noopener">csu.gov.cz/kvk</a></span>
+</footer>
+</div>
+
+<script>
+(function(){
+  const s=document.getElementById('spring');
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    for(let i=0;i<14;i++){
+      const b=document.createElement('span');b.className='bub';
+      const sz=6+Math.random()*16;
+      b.style.width=b.style.height=sz+'px';
+      b.style.left=(10+Math.random()*80)+'%';
+      b.style.animationDuration=(4+Math.random()*5)+'s';
+      b.style.animationDelay=(-Math.random()*8)+'s';
+      s.appendChild(b);
+    }
+  }
+  const Q=[
+    {q:'Které město je krajské?',o:['Cheb','Karlovy Vary','Sokolov'],a:1,f:'Karlovy Vary – sídlo kraje i nejvíc obyvatel.'},
+    {q:'Jak se jmenuje nejvyšší hora kraje?',o:['Klínovec','Sněžka','Lesný'],a:0,f:'Klínovec v Krušných horách, 1 244 m.'},
+    {q:'Do jaké řeky se v Karlových Varech vlévá Teplá?',o:['Vltava','Labe','Ohře'],a:2,f:'Do Ohře, hlavní řeky kraje.'},
+    {q:'Co vzniklo ze zatopeného uhelného lomu u Sokolova?',o:['Jezero Medard','Nádrž Lipno','Máchovo jezero'],a:0,f:'Jezero Medard, asi 490 ha.'},
+    {q:'Odkud pochází slovo „dolar“?',o:['Z Kutné Hory','Z Jáchymova','Z Chebu'],a:1,f:'Z jáchymovských tolarů ze 16. století.'}
+  ];
+  const box=document.getElementById('quiz'),score=document.getElementById('score');let ok=0,done=0;
+  Q.forEach((it,i)=>{
+    const d=document.createElement('div');d.className='q';
+    d.innerHTML='<div class="qt">'+(i+1)+'. '+it.q+'</div><div class="opts"></div><div class="fb"></div>';
+    const opts=d.querySelector('.opts'),fb=d.querySelector('.fb');
+    it.o.forEach((t,j)=>{
+      const b=document.createElement('button');b.type='button';b.id='q'+i+'o'+j;b.textContent=t;
+      b.onclick=()=>{
+        if(d.dataset.done)return;d.dataset.done=1;done++;
+        if(j===it.a){b.classList.add('ok');ok++;fb.textContent='Správně! '+it.f}
+        else{b.classList.add('bad');opts.children[it.a].classList.add('ok');fb.textContent='Kdepak. '+it.f}
+        if(done===Q.length)score.textContent='Výsledek: '+ok+' z '+Q.length+(ok===5?' – jsi znalec Karlovarska!':'');
+      };
+      opts.appendChild(b);
+    });
+    box.appendChild(d);
+  });
+})();
+</script>
+
+</body></html>

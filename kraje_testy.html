@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kraje ČR – Testy</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#f5f0e8;--surface:#fffef9;--text:#1c1c1c;--muted:#6b6558;--border:#ddd5c4;--rc:#c0392b}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1.5rem 5rem}
+  .wrap{max-width:1000px;margin:0 auto}
+  header{text-align:center;margin-bottom:1.2rem}
+  h1{font-family:'Sora',sans-serif;font-size:clamp(1.4rem,4vw,2rem);font-weight:700;margin-bottom:.2rem}
+  .subtitle{font-size:.9rem;color:var(--muted)}
+  .tabs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:1.3rem 0}
+  .tab{font-family:'Sora',sans-serif;font-size:.82rem;font-weight:600;padding:.55rem 1.05rem;border-radius:99px;border:2px solid var(--border);cursor:pointer;background:var(--surface);color:var(--muted);transition:all .2s}
+  .tab.active{background:var(--rc);border-color:var(--rc);color:#fff}
+  .panel{display:none}
+  .panel.visible{display:block}
+  .panel-intro{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:1.2rem;font-size:.87rem;color:var(--muted);line-height:1.6}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.9rem 1.2rem;margin-bottom:1.2rem}
+  .score-big{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:700;color:var(--rc)}
+  .btn-reset{font-size:.85rem;background:none;border:1px solid var(--border);border-radius:7px;padding:.4rem .9rem;cursor:pointer;color:var(--muted)}
+
+  /* Kvíz A-D */
+  .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:1rem}
+  .qcard{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1.1rem}
+  .qcard.answered-correct{border-color:#1a7a4a;box-shadow:0 0 0 3px rgba(26,122,74,.08)}
+  .qcard.answered-wrong{border-color:#c0392b;box-shadow:0 0 0 3px rgba(192,57,43,.08)}
+  .qtop{display:flex;gap:.6rem;margin-bottom:.7rem}
+  .qnum{font-family:'Sora',sans-serif;font-weight:700;font-size:1rem}
+  .qtext{font-size:.9rem;font-weight:500;line-height:1.4}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .opt{font-size:.82rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;cursor:pointer;text-align:left}
+  .opt:hover:not(:disabled){background:#eee9de}
+  .opt.correct{background:#d4eddf;border-color:#1a7a4a;color:#145235;font-weight:500}
+  .opt.wrong{background:#fde8e6;border-color:#c0392b;color:#7a1e16}
+  .explain{margin-top:.6rem;font-size:.79rem;padding:.5rem .7rem;border-radius:7px;display:none}
+  .explain.show-c{display:block;background:#d4eddf;color:#145235}
+  .explain.show-w{display:block;background:#fde8e6;color:#7a1e16}
+
+  /* Otevřené otázky */
+  .open-item{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1.1rem;margin-bottom:.9rem}
+  .open-item .qtext{margin-bottom:.6rem}
+  .open-textarea{width:100%;min-height:60px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:.87rem;background:var(--bg);resize:vertical}
+  .open-textarea:focus{outline:none;border-color:var(--rc)}
+
+  /* Ano/Ne */
+  .tf-item{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem 1.2rem;margin-bottom:.7rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+  .tf-item.answered-correct{border-color:#1a7a4a}
+  .tf-item.answered-wrong{border-color:#c0392b}
+  .tf-text{font-size:.9rem;flex:1;min-width:220px}
+  .tf-btns{display:flex;gap:6px}
+  .tf-btn{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem 1rem;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer}
+  .tf-btn.sel-correct{background:#d4eddf;border-color:#1a7a4a;color:#145235}
+  .tf-btn.sel-wrong{background:#fde8e6;border-color:#c0392b;color:#7a1e16}
+
+  /* Přiřazování */
+  .match-wrap{display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:640px;margin:0 auto}
+  .match-col h4{font-family:'Sora',sans-serif;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.6rem;text-align:center}
+  .match-btn{display:block;width:100%;font-size:.85rem;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:.55rem .8rem;margin-bottom:6px;cursor:pointer;text-align:left}
+  .match-btn.selected{border-color:var(--rc);background:#fdece9}
+  .match-btn.matched{border-color:#1a7a4a;background:#d4eddf;color:#145235;cursor:default}
+  .match-btn.shake{animation:mshake .3s}
+  @keyframes mshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .match-progress{text-align:center;font-size:.85rem;color:var(--muted);margin-top:1rem}
+
+  /* Doplňovačka */
+  .cloze-item{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1rem 1.2rem;margin-bottom:.8rem}
+  .cloze-text{font-size:.92rem;line-height:2}
+  .cloze-input{border:none;border-bottom:2px solid var(--rc);background:transparent;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;width:150px;padding:2px 4px;text-align:center}
+  .cloze-input:focus{outline:none}
+  .cloze-input.correct{border-color:#1a7a4a;color:#145235;background:#d4eddf}
+  .cloze-input.wrong{border-color:#c0392b;color:#7a1e16;background:#fde8e6}
+  .cloze-check{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:7px;border:none;background:var(--rc);color:#fff;cursor:pointer;margin-top:.6rem}
+
+  /* Najdi chybu */
+  .err-item{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
+  .err-para{font-family:'Lora',Georgia,serif;font-size:.92rem;line-height:1.7;margin-bottom:.7rem}
+  .err-reveal-btn{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer}
+  .err-answer{margin-top:.6rem;font-size:.85rem;padding:.6rem .8rem;border-radius:7px;background:#fde8e6;color:#7a1e16;display:none}
+  .err-answer.show{display:block}
+
+  .print-btn{position:fixed;bottom:20px;right:20px;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:600;padding:.6rem 1.3rem;border-radius:10px;border:none;background:var(--rc);color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+
+  @media(max-width:600px){
+    .opts{grid-template-columns:1fr}
+    .match-wrap{grid-template-columns:1fr;max-width:100%}
+  }
+  @media print{
+    .tabs,.print-btn,.btn-reset,.cloze-check,.err-reveal-btn,.score-bar{display:none!important}
+    .panel{display:block!important;page-break-after:always}
+    .panel:last-child{page-break-after:auto}
+    body{background:#fff;padding:.5rem .8rem;font-size:13px}
+    .wrap{max-width:100%}
+    header{margin-bottom:.4rem}
+    h1{font-size:1.2rem}
+    .subtitle{font-size:.76rem}
+    .panel-intro{padding:.5rem .8rem;font-size:.78rem;margin-bottom:.6rem}
+
+    /* Kvíz — vynutit 2 sloupce, mírně zkompaktnit s rezervou */
+    .qgrid{grid-template-columns:1fr 1fr;gap:.5rem}
+    .qcard{padding:.7rem .85rem;break-inside:avoid}
+    .qtop{margin-bottom:.4rem;gap:.45rem}
+    .qnum{font-size:.92rem}
+    .qtext{font-size:.8rem;line-height:1.35}
+    .opts{gap:5px}
+    .opt{padding:.35rem .6rem;font-size:.74rem}
+    .explain{display:none!important}
+
+    /* Otevřené otázky — 2 sloupce */
+    #open-list{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+    .open-item{padding:.6rem .8rem;margin-bottom:0;break-inside:avoid}
+    .open-item .qtext{font-size:.78rem;margin-bottom:.35rem;line-height:1.3}
+    .open-textarea{min-height:68px;font-size:.76rem;padding:6px 8px}
+
+    /* Pravda/Nepravda — 2 sloupce přes CSS columns, zvětšeno pro lepší využití */
+    #tf-list{column-count:2;column-gap:1.1rem}
+    .tf-item{padding:.9rem 1.1rem;margin-bottom:.6rem;break-inside:avoid;display:block}
+    .tf-text{font-size:.95rem;margin-bottom:.5rem;display:block;line-height:1.35}
+    .tf-btns{gap:8px}
+    .tf-btn{padding:.5rem 1rem;font-size:.88rem}
+
+    /* Přiřazování — zvětšeno pro lepší využití stránky */
+    .match-wrap{gap:2.5rem}
+    .match-col h4{font-size:.95rem;margin-bottom:.9rem}
+    .match-btn{padding:1.2rem 1.4rem;font-size:1.05rem;margin-bottom:11px}
+    .match-progress{display:none}
+
+    /* Doplňovačka — 2 sloupce, přiměřená velikost */
+    #cloze-list{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+    .cloze-item{padding:1.6rem 1.8rem;margin-bottom:0;break-inside:avoid;display:flex;align-items:center}
+    .cloze-text{font-size:1.05rem;line-height:1.95}
+    .cloze-input{width:130px;font-size:1.05rem;border-bottom:2px solid #999}
+
+    /* Najdi chybu — zvětšeno */
+    .err-item{padding:1.15rem 1.35rem;margin-bottom:.75rem;break-inside:avoid}
+    .err-para{font-size:1.08rem;line-height:1.75}
+    .err-answer{display:block!important;font-size:.98rem;padding:.65rem .9rem;margin-top:.65rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🇨🇿 Kraje ČR — Testy</h1>
+  <p class="subtitle">6 typů testů · Zeměpis · online i k vytisknutí</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('quiz',this)">✅ Kvíz</button>
+  <button class="tab" onclick="showTab('open',this)">📝 Otevřené otázky</button>
+  <button class="tab" onclick="showTab('tf',this)">⚖️ Pravda / Nepravda</button>
+  <button class="tab" onclick="showTab('match',this)">🔗 Přiřazování</button>
+  <button class="tab" onclick="showTab('cloze',this)">✏️ Doplňovačka</button>
+  <button class="tab" onclick="showTab('err',this)">🔍 Najdi chybu</button>
+</div>
+
+<!-- KVÍZ -->
+<div class="panel visible" id="panel-quiz">
+  <div class="panel-intro">Vyber jednu správnou odpověď u každé otázky.</div>
+  <div class="score-bar">
+    <div><div class="score-big" id="quiz-score">0/12</div><div style="font-size:.85rem;color:var(--muted)">správných odpovědí</div></div>
+    <button class="btn-reset" onclick="resetQuiz()">↺ Začít znovu</button>
+  </div>
+  <div class="qgrid" id="quiz-grid"></div>
+</div>
+
+<!-- OTEVŘENÉ OTÁZKY -->
+<div class="panel" id="panel-open">
+  <div class="panel-intro">Odpovídej vlastními slovy, celou větou.</div>
+  <div id="open-list"></div>
+</div>
+
+<!-- PRAVDA/NEPRAVDA -->
+<div class="panel" id="panel-tf">
+  <div class="panel-intro">Rozhodni, jestli je tvrzení pravdivé, nebo ne.</div>
+  <div class="score-bar">
+    <div><div class="score-big" id="tf-score">0/12</div><div style="font-size:.85rem;color:var(--muted)">správných odpovědí</div></div>
+    <button class="btn-reset" onclick="resetTF()">↺ Začít znovu</button>
+  </div>
+  <div id="tf-list"></div>
+</div>
+
+<!-- PŘIŘAZOVÁNÍ -->
+<div class="panel" id="panel-match">
+  <div class="panel-intro">Klikni na kraj vlevo a pak na jeho krajské město vpravo. Správné dvojice zezelenají.</div>
+  <div class="match-wrap">
+    <div class="match-col"><h4>Kraj</h4><div id="match-left"></div></div>
+    <div class="match-col"><h4>Krajské město</h4><div id="match-right"></div></div>
+  </div>
+  <div class="match-progress" id="match-progress">0 / 10 spárováno</div>
+</div>
+
+<!-- DOPLŇOVAČKA -->
+<div class="panel" id="panel-cloze">
+  <div class="panel-intro">Doplň chybějící slovo nebo číslo do věty.</div>
+  <div id="cloze-list"></div>
+  <button class="cloze-check" onclick="checkCloze()">Zkontrolovat vše</button>
+</div>
+
+<!-- NAJDI CHYBU -->
+<div class="panel" id="panel-err">
+  <div class="panel-intro">V každém odstavci je jedna věcná chyba. Zkus ji najít, pak si over odpověď.</div>
+  <div id="err-list"></div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨 Vytisknout</button>
+</div>
+
+<script>
+function showTab(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('visible');
+  btn.classList.add('active');
+}
+
+// ══════════ 1. KVÍZ A–D ══════════
+const QUIZ = [
+  { q:'Které město je krajským městem Jihočeského kraje?', opts:['A) Plzeň','B) České Budějovice','C) Tábor','D) Písek'], ans:1 },
+  { q:'Který kraj je rozlohou největší v ČR?', opts:['A) Jihomoravský','B) Plzeňský','C) Středočeský','D) Vysočina'], ans:2 },
+  { q:'Jak se jmenuje nejvyšší hora ČR a kde leží?', opts:['A) Praděd, Jeseníky','B) Sněžka, Krkonoše','C) Lysá hora, Beskydy','D) Klínovec, Krušné hory'], ans:1 },
+  { q:'Který kraj sousedí s Rakouskem i Slovenskem zároveň?', opts:['A) Zlínský','B) Jihomoravský','C) Moravskoslezský','D) Karlovarský'], ans:1 },
+  { q:'Ve kterém kraji leží Lednicko-valtický areál (UNESCO)?', opts:['A) Jihočeský','B) Zlínský','C) Jihomoravský','D) Vysočina'], ans:2 },
+  { q:'Který kraj nemá krajské město ve svém názvu?', opts:['A) Vysočina','B) Zlínský','C) Olomoucký','D) Pardubický'], ans:0 },
+  { q:'Ve kterém městě a kraji sídlí automobilka Škoda Auto?', opts:['A) Plzeň, Plzeňský','B) Mladá Boleslav, Středočeský','C) Kvasiny, Královéhradecký','D) Brno, Jihomoravský'], ans:1 },
+  { q:'Který kraj je (mimo Prahu) rozlohou nejmenší?', opts:['A) Liberecký','B) Karlovarský','C) Zlínský','D) Vysočina'], ans:1 },
+  { q:'Který kraj je druhý nejlidnatější v ČR?', opts:['A) Moravskoslezský','B) Jihomoravský','C) Plzeňský','D) Liberecký'], ans:1 },
+  { q:'Ve kterém kraji leží hora Klínovec (Krušné hory)?', opts:['A) Karlovarský','B) Ústecký','C) Liberecký','D) Královéhradecký'], ans:0 },
+  { q:'Který kraj proslavil podnikatel Tomáš Baťa?', opts:['A) Zlínský','B) Olomoucký','C) Jihomoravský','D) Vysočina'], ans:0 },
+  { q:'Kde leží Praděd, druhá nejvyšší hora Česka?', opts:['A) Beskydy','B) Jeseníky','C) Krušné hory','D) Šumava'], ans:1 },
+];
+let quizState = { answered: new Array(QUIZ.length).fill(false), correct: new Array(QUIZ.length).fill(false) };
+function renderQuiz(){
+  document.getElementById('quiz-grid').innerHTML = QUIZ.map((q,qi) => `
+    <div class="qcard" id="qcard-${qi}">
+      <div class="qtop"><span class="qnum">${qi+1}</span><span class="qtext">${q.q}</span></div>
+      <div class="opts" id="opts-${qi}">
+        ${q.opts.map((o,oi)=>`<button class="opt" onclick="answerQuiz(${qi},${oi})">${o}</button>`).join('')}
+      </div>
+      <div class="explain" id="expl-${qi}"></div>
+    </div>`).join('');
+  document.getElementById('quiz-score').textContent = `0/${QUIZ.length}`;
+}
+function answerQuiz(qi, oi){
+  if (quizState.answered[qi]) return;
+  quizState.answered[qi] = true;
+  const q = QUIZ[qi];
+  const btns = document.querySelectorAll(`#opts-${qi} .opt`);
+  const expl = document.getElementById(`expl-${qi}`);
+  const card = document.getElementById(`qcard-${qi}`);
+  btns.forEach((b,idx)=>{
+    b.disabled = true;
+    if (idx===q.ans) b.classList.add('correct');
+    else if (idx===oi) b.classList.add('wrong');
+  });
+  if (oi === q.ans) {
+    quizState.correct[qi] = true;
+    expl.textContent = '✓ Správně!'; expl.className='explain show-c';
+    card.classList.add('answered-correct');
+  } else {
+    expl.textContent = '✗ Špatně. Správná odpověď: ' + q.opts[q.ans].replace(/^[A-D]\) /,'');
+    expl.className='explain show-w';
+    card.classList.add('answered-wrong');
+  }
+  document.getElementById('quiz-score').textContent = `${quizState.correct.filter(Boolean).length}/${QUIZ.length}`;
+}
+function resetQuiz(){
+  quizState = { answered: new Array(QUIZ.length).fill(false), correct: new Array(QUIZ.length).fill(false) };
+  renderQuiz();
+}
+renderQuiz();
+
+// ══════════ 2. OTEVŘENÉ OTÁZKY ══════════
+const OPEN = [
+  'Vyjmenuj alespoň 3 kraje, které sousedí s Německem.',
+  'Proč se o Vysočině říká, že je to jediný kraj bez krajského města v názvu?',
+  'Vysvětli, proč se Praha počítá jako samostatný kraj, přestože je obklopená Středočeským krajem.',
+  'Jmenuj alespoň 2 památky UNESCO v Jihočeském kraji.',
+  'Popiš, čím je historicky proslulý Zlínský kraj.',
+  'Proč má Karlovarský kraj tak silnou tradici lázeňství?',
+  'Který kraj má nejvíce vinic v Česku? Zkus vysvětlit proč zrovna tam.',
+  'Vyjmenuj kraje, které leží na Moravě (ne v Čechách).',
+  'Co znamená, že kraj má „okresy"? Kolik jich má kraj, ve kterém bydlíš (nebo kraj podle výběru)?',
+  'Vyber si jeden kraj a napiš o něm alespoň 3 zajímavosti.',
+];
+document.getElementById('open-list').innerHTML = OPEN.map((q,i) => `
+  <div class="open-item">
+    <div class="qtext"><strong>${i+1}.</strong> ${q}</div>
+    <textarea class="open-textarea" placeholder="Napiš svou odpověď…"></textarea>
+  </div>`).join('');
+
+// ══════════ 3. PRAVDA/NEPRAVDA ══════════
+const TF = [
+  { s:'Sněžka je nejvyšší hora České republiky.', a:true },
+  { s:'Praha je součástí Středočeského kraje.', a:false },
+  { s:'Jihomoravský kraj sousedí s Rakouskem i Slovenskem.', a:true },
+  { s:'Karlovarský kraj je největší kraj ČR podle rozlohy.', a:false },
+  { s:'Krajským městem Olomouckého kraje je Olomouc.', a:true },
+  { s:'V Ústeckém kraji se těží hnědé uhlí.', a:true },
+  { s:'Krajské město kraje Vysočina je Havlíčkův Brod.', a:false },
+  { s:'Zlínský kraj sousedí se Slovenskem.', a:true },
+  { s:'Nejvyšší horou Moravy je Lysá hora v Beskydech.', a:false },
+  { s:'Liberecký kraj sousedí s Německem i Polskem.', a:true },
+  { s:'Pardubice jsou proslulé svým perníkem.', a:true },
+  { s:'Krajským městem Moravskoslezského kraje je Opava.', a:false },
+];
+let tfState = { answered: new Array(TF.length).fill(false), correct: new Array(TF.length).fill(false) };
+function renderTF(){
+  document.getElementById('tf-list').innerHTML = TF.map((t,i) => `
+    <div class="tf-item" id="tf-item-${i}">
+      <div class="tf-text"><strong>${i+1}.</strong> ${t.s}</div>
+      <div class="tf-btns">
+        <button class="tf-btn" onclick="answerTF(${i},true)">Pravda</button>
+        <button class="tf-btn" onclick="answerTF(${i},false)">Nepravda</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('tf-score').textContent = `0/${TF.length}`;
+}
+function answerTF(i, val){
+  if (tfState.answered[i]) return;
+  tfState.answered[i] = true;
+  const t = TF[i];
+  const item = document.getElementById(`tf-item-${i}`);
+  const btns = item.querySelectorAll('.tf-btn');
+  const correct = val === t.a;
+  btns.forEach(b => b.disabled = true);
+  const chosenBtn = val ? btns[0] : btns[1];
+  const rightBtn = t.a ? btns[0] : btns[1];
+  if (correct) {
+    tfState.correct[i] = true;
+    chosenBtn.classList.add('sel-correct');
+    item.classList.add('answered-correct');
+  } else {
+    chosenBtn.classList.add('sel-wrong');
+    rightBtn.classList.add('sel-correct');
+    item.classList.add('answered-wrong');
+  }
+  document.getElementById('tf-score').textContent = `${tfState.correct.filter(Boolean).length}/${TF.length}`;
+}
+function resetTF(){
+  tfState = { answered: new Array(TF.length).fill(false), correct: new Array(TF.length).fill(false) };
+  renderTF();
+}
+renderTF();
+
+// ══════════ 4. PŘIŘAZOVÁNÍ ══════════
+const MATCH_PAIRS = [
+  ['Jihočeský', 'České Budějovice'],
+  ['Plzeňský', 'Plzeň'],
+  ['Karlovarský', 'Karlovy Vary'],
+  ['Ústecký', 'Ústí nad Labem'],
+  ['Liberecký', 'Liberec'],
+  ['Královéhradecký', 'Hradec Králové'],
+  ['Pardubický', 'Pardubice'],
+  ['Vysočina', 'Jihlava'],
+  ['Jihomoravský', 'Brno'],
+  ['Moravskoslezský', 'Ostrava'],
+];
+let matchState = { selectedLeft: null, matched: new Set() };
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function renderMatch(){
+  const leftOrder = MATCH_PAIRS.map((p,i)=>i);
+  const rightOrder = shuffle(MATCH_PAIRS.map((p,i)=>i));
+  document.getElementById('match-left').innerHTML = leftOrder.map(i =>
+    `<button class="match-btn" id="ml-${i}" data-i="${i}" onclick="clickLeft(${i})">${MATCH_PAIRS[i][0]}</button>`).join('');
+  document.getElementById('match-right').innerHTML = rightOrder.map(i =>
+    `<button class="match-btn" id="mr-${i}" data-i="${i}" onclick="clickRight(${i})">${MATCH_PAIRS[i][1]}</button>`).join('');
+  matchState = { selectedLeft: null, matched: new Set() };
+  document.getElementById('match-progress').textContent = `0 / ${MATCH_PAIRS.length} spárováno`;
+}
+function clickLeft(i){
+  if (matchState.matched.has(i)) return;
+  document.querySelectorAll('#match-left .match-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById(`ml-${i}`).classList.add('selected');
+  matchState.selectedLeft = i;
+}
+function clickRight(i){
+  if (matchState.matched.has(i) || matchState.selectedLeft === null) return;
+  const li = matchState.selectedLeft;
+  const rBtn = document.getElementById(`mr-${i}`);
+  const lBtn = document.getElementById(`ml-${li}`);
+  if (li === i) {
+    lBtn.classList.remove('selected'); lBtn.classList.add('matched'); lBtn.disabled = true;
+    rBtn.classList.add('matched'); rBtn.disabled = true;
+    matchState.matched.add(i);
+    matchState.selectedLeft = null;
+    document.getElementById('match-progress').textContent = `${matchState.matched.size} / ${MATCH_PAIRS.length} spárováno`;
+  } else {
+    rBtn.classList.add('shake');
+    setTimeout(()=>rBtn.classList.remove('shake'), 300);
+  }
+}
+renderMatch();
+
+// ══════════ 5. DOPLŇOVAČKA ══════════
+const CLOZE = [
+  { pre:'Krajské město Jihočeského kraje je', answer:'České Budějovice', post:'.' },
+  { pre:'Nejvyšší hora Česka se jmenuje Sněžka a měří', answer:'1603', post:'metrů.' },
+  { pre:'Škoda Auto sídlí ve městě', answer:'Mladá Boleslav', post:'.' },
+  { pre:'Karlovarský kraj je proslulý', answer:'lázeňstvím', post:'.' },
+  { pre:'Přes Ústecký kraj protéká řeka', answer:'Labe', post:', která pak opouští Česko směrem do Německa.' },
+  { pre:'Zlín přeměnil ve 20. století podnikatel Tomáš', answer:'Baťa', post:'.' },
+  { pre:'Nejvíc vinic v Česku roste v kraji', answer:'Jihomoravském', post:'.' },
+  { pre:'Praha je jediný kraj, který tvoří jen', answer:'jedno město', post:'.' },
+  { pre:'Krajské město Moravskoslezského kraje je', answer:'Ostrava', post:'.' },
+  { pre:'Rybniční soustava kolem Třeboně patří k největším v', answer:'Evropě', post:'.' },
+];
+document.getElementById('cloze-list').innerHTML = CLOZE.map((c,i) => `
+  <div class="cloze-item">
+    <div class="cloze-text"><strong>${i+1}.</strong> ${c.pre} <input class="cloze-input" id="cloze-${i}" type="text"> ${c.post}</div>
+  </div>`).join('');
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function checkCloze(){
+  CLOZE.forEach((c,i) => {
+    const inp = document.getElementById(`cloze-${i}`);
+    inp.classList.remove('correct','wrong');
+    if (normalize(inp.value) === normalize(c.answer)) inp.classList.add('correct');
+    else { inp.classList.add('wrong'); inp.value = c.answer; }
+  });
+}
+
+// ══════════ 6. NAJDI CHYBU ══════════
+const ERRORS = [
+  { text:'Jihočeský kraj má krajské město <strong>Plzeň</strong>. Je proslulý pivovarnictvím díky značce Budweiser Budvar a rozsáhlou rybniční soustavou kolem Třeboně.', fix:'Krajské město Jihočeského kraje je České Budějovice, ne Plzeň (Plzeň je krajské město Plzeňského kraje).' },
+  { text:'Moravskoslezský kraj má krajské město Ostravu a sousedí s <strong>Rakouskem</strong> a Slovenskem.', fix:'Moravskoslezský kraj sousedí s Polskem a Slovenskem, ne s Rakouskem.' },
+  { text:'Nejvyšší horou Česka je <strong>Praděd</strong> v Jeseníkách, vysoký 1 603 metrů.', fix:'Nejvyšší horou Česka je Sněžka v Krkonoších (1 603 m). Praděd v Jeseníkách je druhá nejvyšší hora Česka (1 491 m).' },
+  { text:'Krajským městem kraje Vysočina je <strong>Žďár nad Sázavou</strong>.', fix:'Krajské město Vysočiny je Jihlava.' },
+  { text:'<strong>Karlovarský</strong> kraj je největší kraj České republiky podle rozlohy.', fix:'Největší kraj podle rozlohy je Středočeský kraj. Karlovarský kraj je naopak jeden z nejmenších.' },
+  { text:'Zlínský kraj sousedí s <strong>Rakouskem</strong>.', fix:'Zlínský kraj sousedí se Slovenskem, ne s Rakouskem.' },
+];
+document.getElementById('err-list').innerHTML = ERRORS.map((e,i) => `
+  <div class="err-item">
+    <div class="err-para"><strong>${i+1}.</strong> ${e.text}</div>
+    <button class="err-reveal-btn" onclick="revealErr(${i})">👁 Zobrazit chybu</button>
+    <div class="err-answer" id="err-ans-${i}">${e.fix}</div>
+  </div>`).join('');
+function revealErr(i){
+  document.getElementById(`err-ans-${i}`).classList.add('show');
+}
+</script>
+</body>
+</html>

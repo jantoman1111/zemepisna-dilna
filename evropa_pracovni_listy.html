@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evropa – Pracovní listy</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #f5f0e8; --surface: #fffef9; --text: #1c1c1c; --muted: #6b6558; --border: #ddd5c4; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1.5rem 5rem; }
+
+  .region-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; max-width: 950px; margin-left: auto; margin-right: auto; }
+  .rtab { font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 600; padding: 0.55rem 1.2rem; border-radius: 99px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--surface); color: var(--muted); }
+  .rtab:hover { transform: translateY(-1px); }
+  .rtab.active { color: #fff; }
+  .c-north  { --rc: #1a5a8a; } .rtab.c-north.active  { background: #1a5a8a; border-color: #1a5a8a; }
+  .c-west   { --rc: #5b3a8a; } .rtab.c-west.active   { background: #5b3a8a; border-color: #5b3a8a; }
+  .c-center { --rc: #1a7a4a; } .rtab.c-center.active { background: #1a7a4a; border-color: #1a7a4a; }
+  .c-south  { --rc: #c0642a; } .rtab.c-south.active  { background: #c0642a; border-color: #c0642a; }
+  .c-east   { --rc: #7a1a2a; } .rtab.c-east.active   { background: #7a1a2a; border-color: #7a1a2a; }
+
+  .region-panel { display: none; max-width: 950px; margin: 0 auto; }
+  .region-panel.visible { display: block; }
+
+  header.top { text-align: center; margin-bottom: 1.5rem; }
+  h1.maintitle { font-family: 'Sora', sans-serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.9rem; color: var(--muted); }
+
+  .pl-hdr { text-align: center; margin-bottom: 1.2rem; }
+  .pl-hdr h2 { font-family: 'Sora', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.7rem); font-weight: 700; }
+  .pl-hdr .pl-meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+
+  .pl-info-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+  .pl-info-field { display: flex; flex-direction: column; gap: 3px; }
+  .pl-info-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .pl-info-input { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; color: var(--text); }
+
+  .pl-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.3rem 1.5rem; margin-bottom: 1.2rem; }
+  .pl-section-title { font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 6px; }
+  .pl-section-sub { font-size: 0.83rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+  /* A: open questions */
+  .pl-open-item { margin-bottom: 1rem; }
+  .pl-open-item:last-child { margin-bottom: 0; }
+  .pl-qnum { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.85rem; margin-right: 4px; }
+  .pl-qtext { font-size: 0.92rem; line-height: 1.5; margin-bottom: 0.4rem; }
+  .pl-textarea { width: 100%; min-height: 64px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--text); background: #fffef9; resize: vertical; }
+  .pl-textarea:focus { outline: none; border-color: var(--rc); }
+
+  /* B: atlas table */
+  .pl-atlas-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.7rem; }
+  table.pl-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  table.pl-table th { background: var(--bg); color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  table.pl-table td { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.pl-table td.pl-statename { font-weight: 600; white-space: nowrap; }
+  .pl-atlas-input { width: 100%; border: 1px solid var(--border); border-radius: 5px; padding: 5px 7px; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; background: #fffef9; }
+  .pl-atlas-input:focus { outline: none; border-color: var(--rc); }
+
+  /* C: closed questions */
+  .pl-mcq-item { margin-bottom: 1.1rem; }
+  .pl-mcq-item:last-child { margin-bottom: 0; }
+  .pl-mcq-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 0.5rem; }
+  .pl-mcq-opt { font-family: 'DM Sans', sans-serif; font-size: 0.84rem; background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer; text-align: left; color: var(--text); transition: all 0.12s; }
+  .pl-mcq-opt:hover { border-color: #bbb3a2; }
+  .pl-mcq-opt.selected { border-color: var(--rc); background: #fffef9; box-shadow: 0 0 0 2px color-mix(in srgb, var(--rc) 20%, transparent); }
+  .pl-mcq-opt.reveal-correct { border-color: #1a7a4a; background: #d4eddf; color: #145235; font-weight: 600; }
+  .pl-mcq-opt.reveal-wrong { border-color: #c0392b; background: #fde8e6; color: #7a1e16; }
+  .pl-solution-btn { font-family: 'Sora', sans-serif; font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.9rem; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; margin-top: 0.4rem; }
+  .pl-solution-btn:hover { background: #ede8df; }
+
+  /* D: map */
+  .pl-map-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.9rem; }
+  .pl-map-chip { font-size: 0.8rem; font-weight: 600; padding: 4px 11px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); transition: all 0.2s; }
+  .pl-map-chip.found { border-color: #1a7a4a; background: #d4eddf; color: #145235; }
+  .pl-map-wrap { background: #e7ecef; border-radius: 12px; overflow: hidden; position: relative; }
+  .pl-map-wrap svg { width: 100%; height: auto; display: block; }
+  .pl-country { fill: #b9c0c8; stroke: #f5f0e8; stroke-width: 0.6; cursor: pointer; transition: fill 0.15s; }
+  .pl-country:hover { fill: #9aa4b0; }
+  .pl-country.pl-hit { cursor: default; }
+  .pl-country.pl-shake { animation: pl-shk 0.3s; }
+  @keyframes pl-shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+  .pl-map-progress { font-size: 0.82rem; color: var(--muted); margin-top: 0.6rem; }
+
+  .pl-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1.3rem; margin-top: 0.5rem; }
+  .pl-footer-note { font-size: 0.82rem; color: var(--muted); }
+  .pl-print-btn { font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1.2rem; border-radius: 8px; border: none; background: var(--rc); color: #fff; cursor: pointer; }
+  .pl-print-btn:hover { opacity: 0.88; }
+
+  @media (max-width: 560px) {
+    .pl-info-row { grid-template-columns: 1fr; }
+    .pl-mcq-opts { grid-template-columns: 1fr; }
+    .pl-section { padding: 1rem; }
+  }
+
+  @media print {
+    .region-tabs, .pl-noprint { display: none !important; }
+    body { background: #fff; padding: 0.4rem .6rem; font-size: 13px; }
+    .region-panel { display: block !important; page-break-after: always; }
+    .region-panel:last-child { page-break-after: auto; }
+    .pl-section, .pl-info-row, .pl-footer { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+    header.top { display: none; }
+    .pl-textarea::placeholder, .pl-info-input::placeholder, .pl-atlas-input::placeholder { color: transparent; }
+
+    .pl-hdr { margin-bottom: .5rem; }
+    .pl-hdr h2 { font-size: 1.1rem; }
+    .pl-hdr .pl-meta { font-size: .72rem; }
+    .pl-info-row { padding: .5rem .7rem; margin-bottom: .5rem; }
+    .pl-info-label { font-size: .6rem; }
+    .pl-info-input { padding: 4px 7px; font-size: .78rem; }
+
+    .pl-section { padding: .7rem .9rem; margin-bottom: .5rem; }
+    .pl-section-title { font-size: .8rem; margin-bottom: .2rem; }
+    .pl-section-sub { font-size: .7rem; margin-bottom: .5rem; }
+
+    /* A: otevřené otázky */
+    .pl-open-item { margin-bottom: .5rem; }
+    .pl-qtext { font-size: .76rem; margin-bottom: .25rem; }
+    .pl-textarea { min-height: 38px; padding: 5px 7px; font-size: .72rem; }
+
+    /* B: atlas tabulka */
+    table.pl-table { font-size: .72rem; }
+    table.pl-table th { padding: 4px 5px; font-size: .6rem; }
+    table.pl-table td { padding: 3px 4px; }
+    .pl-atlas-input { padding: 3px 5px; font-size: .68rem; }
+    .pl-atlas-hint { font-size: .68rem; margin-bottom: .4rem; }
+
+    /* C: uzavřené otázky */
+    .pl-mcq-item { margin-bottom: .55rem; }
+    .pl-mcq-opts { gap: 4px; margin-top: .3rem; }
+    .pl-mcq-opt { padding: .32rem .5rem; font-size: .68rem; }
+    .pl-solution-btn { display: none; }
+
+    /* D: mapa */
+    .pl-map-legend { gap: 4px; margin-bottom: .5rem; }
+    .pl-map-chip { padding: 2px 8px; font-size: .66rem; }
+    .pl-map-wrap { width: 65%; margin: 0 auto; }
+    .pl-map-progress { display: none; }
+
+    .pl-footer { padding: .5rem .7rem; }
+    .pl-footer-note { font-size: .68rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 class="maintitle">EVROPA – Pracovní listy</h1>
+  <p class="subtitle">Zeměpis · vyberte region · k vyplnění online nebo k vytisknutí</p>
+</header>
+
+<div class="region-tabs">
+  <button class="rtab c-north active" onclick="showRegion('north',this)">❄️ Severní Evropa</button>
+  <button class="rtab c-west"  onclick="showRegion('west',this)">🏰 Západní Evropa</button>
+  <button class="rtab c-center" onclick="showRegion('center',this)">⛰ Střední Evropa</button>
+  <button class="rtab c-south"  onclick="showRegion('south',this)">☀️ Jižní Evropa</button>
+  <button class="rtab c-east"  onclick="showRegion('east',this)">🐻 Východní Evropa</button>
+</div>
+
+<div id="regions-root"></div>
+
+<script>
+const REGIONS = {
+  north: { label: 'Severní Evropa', color: '#1a5a8a', icon:'❄️',
+    atlasStates: ['Norsko','Švédsko','Finsko','Dánsko','Island'],
+    openQuestions: [
+      'Vysvětli vlastními slovy, proč jsou norské fjordy tak hluboké a úzké. Jak vznikly?',
+      'Porovnej klima Islandu a Švédska. Čím se liší a čím jsou si naopak podobné?',
+      'Co znamená, že Švédsko a Finsko mají „sociální stát“? Uveď alespoň dva konkrétní příklady, co to pro obyvatele znamená.',
+      'Norsko investuje výnosy z ropy do státního fondu místo okamžitého utrácení. Je to podle tebe dobrý nápad? Zdůvodni svůj názor (alespoň 3 věty).'
+    ],
+    mcq: [
+      { q: 'Který poloostrov tvoří základ severní Evropy?', opts: ['A) Pyrenejský','B) Skandinávský','C) Apeninský','D) Balkánský'], ans: 1 },
+      { q: 'Jak se nazývá teplý mořský proud ovlivňující klima regionu?', opts: ['A) Labradorský','B) Golfský','C) Kurošio','D) Humboldtův'], ans: 1 },
+      { q: 'Který z těchto států NENÍ pobaltský stát?', opts: ['A) Litva','B) Lotyšsko','C) Estonsko','D) Dánsko'], ans: 3 },
+      { q: 'Kdo jsou Sámové?', opts: ['A) Obchodníci z Islandu','B) Původní obyvatelé severu Skandinávie','C) Vikingská dynastie','D) Etnikum z Pobaltí'], ans: 1 },
+      { q: 'Čím je financován norský státní fond?', opts: ['A) Daněmi z turistiky','B) Ropou a zemním plynem','C) Rybolovem','D) Vývozem dřeva'], ans: 1 },
+    ],
+    mapTargets: [{id:578,name:'Norsko'},{id:752,name:'Švédsko'},{id:246,name:'Finsko'},{id:208,name:'Dánsko'},{id:352,name:'Island'}]
+  },
+  west: { label: 'Západní Evropa', color: '#5b3a8a', icon:'🏰',
+    atlasStates: ['Francie','Německo','Velká Británie','Irsko','Nizozemsko'],
+    openQuestions: [
+      'Vysvětli, proč muselo Nizozemsko vybudovat rozsáhlý systém hrází a polderů.',
+      'Jaký byl dopad průmyslové revoluce na společnost ve Velké Británii? Uveď alespoň dvě změny.',
+      'Proč sídlí hlavní instituce EU právě v Bruselu? Zkus najít nebo odhadnout důvod.',
+      'Rotterdam je největší přístav Evropy. Proč je poloha při ústí řeky do moře pro obchod tak výhodná?'
+    ],
+    mcq: [
+      { q: 'Jaké hlavní město má Belgie?', opts: ['A) Amsterdam','B) Brusel','C) Lucemburk','D) Haag'], ans: 1 },
+      { q: 'Kolik procent Nizozemska leží pod úrovní moře?', opts: ['A) 5 %','B) 25 %','C) 50 %','D) 75 %'], ans: 1 },
+      { q: 'Který stát má největší ekonomiku v Evropě?', opts: ['A) Francie','B) Německo','C) Velká Británie','D) Itálie'], ans: 1 },
+      { q: 'Kde probíhala průmyslová revoluce nejdříve?', opts: ['A) Francie','B) Německo','C) Velká Británie','D) Nizozemsko'], ans: 2 },
+      { q: 'Jak se nazývá největší přístav Evropy?', opts: ['A) Hamburk','B) Marseille','C) Rotterdam','D) Le Havre'], ans: 2 },
+    ],
+    mapTargets: [{id:250,name:'Francie'},{id:276,name:'Německo'},{id:826,name:'Velká Británie'},{id:372,name:'Irsko'},{id:56,name:'Belgie'}]
+  },
+  center: { label: 'Střední Evropa', color: '#1a7a4a', icon:'⛰',
+    atlasStates: ['Česko','Polsko','Slovensko','Maďarsko','Rakousko'],
+    openQuestions: [
+      'Vysvětli, proč se rozdělení Československa v roce 1993 nazývá „sametový rozvod“.',
+      'Jaký vliv mělo Rakousko-Uhersko na dnešní státy střední Evropy? Uveď jeden dodnes viditelný příklad.',
+      'Proč má cestovní ruch v alpských zemích (Rakousko, Švýcarsko) velký hospodářský význam?',
+      'Švýcarsko není v EU, ale je v Schengenu. Vysvětli vlastními slovy, v čem je mezi tím rozdíl.'
+    ],
+    mcq: [
+      { q: 'Kdy se rozdělilo Československo?', opts: ['A) 1989','B) 1991','C) 1993','D) 2004'], ans: 2 },
+      { q: 'Jaké je hlavní město Švýcarska?', opts: ['A) Curych','B) Ženeva','C) Bern','D) Basilej'], ans: 2 },
+      { q: 'Které pohoří je nejvyšší v Evropě mimo Kavkaz?', opts: ['A) Karpaty','B) Alpy','C) Šumava','D) Krkonoše'], ans: 1 },
+      { q: 'Kde leží Panonská nížina?', opts: ['A) Švýcarsko','B) Rakousko','C) Maďarsko','D) Polsko'], ans: 2 },
+      { q: 'Čím je Švýcarsko celosvětově proslulé?', opts: ['A) Textilním průmyslem','B) Bankovnictvím a hodinářstvím','C) Loděnicemi','D) Těžbou ropy'], ans: 1 },
+    ],
+    mapTargets: [{id:203,name:'Česko'},{id:616,name:'Polsko'},{id:703,name:'Slovensko'},{id:348,name:'Maďarsko'},{id:40,name:'Rakousko'}]
+  },
+  south: { label: 'Jižní Evropa', color: '#c0642a', icon:'☀️',
+    atlasStates: ['Itálie','Španělsko','Portugalsko','Řecko','Chorvatsko'],
+    openQuestions: [
+      'Vysvětli, proč má jižní Evropa tolik aktivních sopek a zemětřesení.',
+      'Jaký je rozdíl mezi středomořským a oceánským podnebím? Popiš vlastními slovy.',
+      'Proč je cestovní ruch pro ekonomiky jižní Evropy tak důležitý, ale zároveň rizikový?',
+      'Starověké Řecko je kolébkou demokracie. Co si myslíš, že z tehdejšího systému přetrvalo dodnes?'
+    ],
+    mcq: [
+      { q: 'Jaké je hlavní město Řecka?', opts: ['A) Soluň','B) Atény','C) Patra','D) Larisa'], ans: 1 },
+      { q: 'Která sopka je nejaktivnější v Evropě?', opts: ['A) Vesuv','B) Etna','C) Stromboli','D) Santorini'], ans: 1 },
+      { q: 'Jaké podnebí převládá v jižní Evropě?', opts: ['A) Oceánské','B) Kontinentální','C) Středomořské','D) Subarktické'], ans: 2 },
+      { q: 'Kde vznikla demokracie?', opts: ['A) Řím','B) Řecko','C) Egypt','D) Španělsko'], ans: 1 },
+      { q: 'Které odvětví je pro jižní Evropu klíčové?', opts: ['A) Těžba surovin','B) Cestovní ruch','C) Rybolov v Severním moři','D) Těžký průmysl'], ans: 1 },
+    ],
+    mapTargets: [{id:380,name:'Itálie'},{id:724,name:'Španělsko'},{id:620,name:'Portugalsko'},{id:300,name:'Řecko'},{id:191,name:'Chorvatsko'}]
+  },
+  east: { label: 'Východní Evropa', color: '#7a1a2a', icon:'🐻',
+    atlasStates: ['Rusko','Ukrajina','Bělorusko','Moldavsko'],
+    openQuestions: [
+      'Vysvětli, proč se Ukrajině říká „obilnice Evropy“.',
+      'Jaký byl dopad rozpadu Sovětského svazu v roce 1991 na region? Uveď alespoň jeden důsledek.',
+      'Proč je Volha pro Rusko hospodářsky i historicky významná řeka?',
+      'Rusko má 11 časových pásem. Vysvětli, proč tomu tak je, a jaké to může mít praktické důsledky pro život v zemi.'
+    ],
+    mcq: [
+      { q: 'Jaké je hlavní město Ukrajiny?', opts: ['A) Charkov','B) Kyjev','C) Oděsa','D) Lvov'], ans: 1 },
+      { q: 'Které pohoří odděluje Evropu od Asie?', opts: ['A) Kavkaz','B) Karpaty','C) Ural','D) Altaj'], ans: 2 },
+      { q: 'Která řeka je nejdelší v Evropě?', opts: ['A) Dněpr','B) Don','C) Dunaj','D) Volha'], ans: 3 },
+      { q: 'Kdy se rozpadl Sovětský svaz?', opts: ['A) 1985','B) 1989','C) 1991','D) 1993'], ans: 2 },
+      { q: 'Jaká je hlavní vývozní surovina Ruska?', opts: ['A) Uhlí','B) Ropa a zemní plyn','C) Zlato','D) Dřevo'], ans: 1 },
+    ],
+    mapTargets: [{id:643,name:'Rusko'},{id:804,name:'Ukrajina'},{id:112,name:'Bělorusko'},{id:498,name:'Moldavsko'}]
+  }
+};
+
+const ATLAS_COLS = ['Hlavní město','Rozloha (km²)','Počet obyvatel','Měna'];
+
+function buildRegionHTML(key, r) {
+  return `
+  <div class="region-panel${key === 'north' ? ' visible' : ''}" id="panel-${key}" style="--rc:${r.color}">
+    <div class="pl-hdr">
+      <h2>${r.icon} ${r.label} — Pracovní list</h2>
+      <div class="pl-meta">Zeměpis · 4 části · online i k vytisknutí</div>
+    </div>
+
+    <div class="pl-info-row">
+      <div class="pl-info-field"><span class="pl-info-label">Jméno</span><input class="pl-info-input" type="text" placeholder="Vaše jméno…"></div>
+      <div class="pl-info-field"><span class="pl-info-label">Třída</span><input class="pl-info-input" type="text" placeholder="Třída…"></div>
+      <div class="pl-info-field"><span class="pl-info-label">Datum</span><input class="pl-info-input" type="date"></div>
+    </div>
+
+    <div class="pl-section">
+      <div class="pl-section-title">📝 Část A — Otevřené otázky</div>
+      <div class="pl-section-sub">Odpovídej vlastními slovy, celou větou.</div>
+      <div id="open-${key}"></div>
+    </div>
+
+    <div class="pl-section">
+      <div class="pl-section-title">📚 Část B — Práce s atlasem</div>
+      <div class="pl-atlas-hint">Pomocí Atlasu Evropy (nebo jiného atlasu) dohledej a doplň údaje o státech.</div>
+      <div style="overflow-x:auto"><table class="pl-table" id="atlas-${key}"></table></div>
+    </div>
+
+    <div class="pl-section">
+      <div class="pl-section-title">✅ Část C — Uzavřené otázky</div>
+      <div class="pl-section-sub">Vyber jednu správnou odpověď.</div>
+      <div id="mcq-${key}"></div>
+      <button class="pl-solution-btn pl-noprint" onclick="revealSolution('${key}')">👁 Zobrazit řešení</button>
+    </div>
+
+    <div class="pl-section">
+      <div class="pl-section-title">🗺️ Část D — Práce s mapou</div>
+      <div class="pl-section-sub">Najdi a klikni na mapě na tyto státy (nebo je při tisku ručně vybarvi):</div>
+      <div class="pl-map-legend" id="legend-${key}"></div>
+      <div class="pl-map-wrap"><svg id="map-${key}" viewBox="0 0 1000 860" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="pl-map-progress" id="progress-${key}">0 / ${r.mapTargets.length} nalezeno</div>
+    </div>
+
+    <div class="pl-footer">
+      <span class="pl-footer-note">Hodnocení: _______________________ &nbsp;·&nbsp; Body: _________</span>
+      <button class="pl-print-btn pl-noprint" onclick="window.print()">🖨 Vytisknout</button>
+    </div>
+  </div>`;
+}
+
+const root = document.getElementById('regions-root');
+root.innerHTML = Object.entries(REGIONS).map(([k, r]) => buildRegionHTML(k, r)).join('');
+
+// ── Render open questions ──
+Object.entries(REGIONS).forEach(([key, r]) => {
+  document.getElementById(`open-${key}`).innerHTML = r.openQuestions.map((q, i) => `
+    <div class="pl-open-item">
+      <div class="pl-qtext"><span class="pl-qnum">${i + 1}.</span>${q}</div>
+      <textarea class="pl-textarea" placeholder="Napiš svou odpověď…"></textarea>
+    </div>`).join('');
+});
+
+// ── Render atlas tables ──
+Object.entries(REGIONS).forEach(([key, r]) => {
+  const thead = `<thead><tr><th>Stát</th>${ATLAS_COLS.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${r.atlasStates.map(s => `
+    <tr><td class="pl-statename">${s}</td>${ATLAS_COLS.map(() => `<td><input class="pl-atlas-input" type="text"></td>`).join('')}</tr>`).join('')}</tbody>`;
+  document.getElementById(`atlas-${key}`).innerHTML = thead + tbody;
+});
+
+// ── Render MCQ ──
+const mcqState = {};
+Object.entries(REGIONS).forEach(([key, r]) => {
+  mcqState[key] = { selected: new Array(r.mcq.length).fill(null), revealed: false };
+  document.getElementById(`mcq-${key}`).innerHTML = r.mcq.map((q, qi) => `
+    <div class="pl-mcq-item">
+      <div class="pl-qtext"><span class="pl-qnum">${qi + 1}.</span>${q.q}</div>
+      <div class="pl-mcq-opts" id="mcq-${key}-${qi}">
+        ${q.opts.map((o, oi) => `<button class="pl-mcq-opt" onclick="selectMcq('${key}',${qi},${oi})">${o}</button>`).join('')}
+      </div>
+    </div>`).join('');
+});
+
+function selectMcq(key, qi, oi) {
+  if (mcqState[key].revealed) return;
+  mcqState[key].selected[qi] = oi;
+  const btns = document.querySelectorAll(`#mcq-${key}-${qi} .pl-mcq-opt`);
+  btns.forEach((b, idx) => b.classList.toggle('selected', idx === oi));
+}
+
+function revealSolution(key) {
+  const r = REGIONS[key];
+  mcqState[key].revealed = true;
+  r.mcq.forEach((q, qi) => {
+    const btns = document.querySelectorAll(`#mcq-${key}-${qi} .pl-mcq-opt`);
+    btns.forEach((b, idx) => {
+      b.classList.remove('selected');
+      b.disabled = true;
+      if (idx === q.ans) b.classList.add('reveal-correct');
+      else if (idx === mcqState[key].selected[qi]) b.classList.add('reveal-wrong');
+    });
+  });
+}
+
+// ── Region tab switching ──
+function showRegion(key, btn) {
+  document.querySelectorAll('.region-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${key}`).classList.add('visible');
+  btn.classList.add('active');
+}
+
+// ── Map legend ──
+Object.entries(REGIONS).forEach(([key, r]) => {
+  document.getElementById(`legend-${key}`).innerHTML = r.mapTargets.map(t =>
+    `<span class="pl-map-chip" id="chip-${key}-${t.id}">${t.name}</span>`).join('');
+});
+
+// ── Map rendering (d3 + topojson, same projection as the site's main map) ──
+const mapFound = {};
+Object.keys(REGIONS).forEach(k => { mapFound[k] = new Set(); });
+
+async function initMaps() {
+  try {
+    const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+    const geoData = topojson.feature(world, world.objects.countries);
+    const projection = d3.geoMercator().center([18, 54]).scale(950).translate([500, 430]);
+    const pathGen = d3.geoPath().projection(projection);
+
+    // all European country numeric ids we care about (for context / clickability)
+    const EUROPE_IDS = new Set([8,20,40,56,70,100,191,196,203,208,233,246,250,276,300,336,348,352,372,380,428,438,440,442,470,492,498,499,528,578,616,620,642,643,674,688,703,705,724,752,756,804,807,826,112]);
+
+    Object.entries(REGIONS).forEach(([key, r]) => {
+      const svg = d3.select(`#map-${key}`);
+      const targetIds = new Set(r.mapTargets.map(t => String(t.id)));
+      const nameById = {};
+      r.mapTargets.forEach(t => nameById[String(t.id)] = t.name);
+
+      geoData.features.forEach(feat => {
+        const id = String(feat.id);
+        if (!EUROPE_IDS.has(Number(id))) return;
+        svg.append('path')
+          .datum(feat)
+          .attr('class', 'pl-country')
+          .attr('id', `pc-${key}-${id}`)
+          .attr('d', pathGen)
+          .on('click', () => handleMapClick(key, id, targetIds, nameById));
+      });
+    });
+  } catch (e) {
+    document.querySelectorAll('.pl-map-wrap').forEach(w => { w.innerHTML = '<p style="padding:1rem;color:#7a1e16;font-size:.85rem">Mapu se nepodařilo načíst (zkontrolujte připojení k internetu).</p>'; });
+  }
+}
+
+function handleMapClick(key, id, targetIds, nameById) {
+  if (mapFound[key].has(id)) return;
+  const el = document.getElementById(`pc-${key}-${id}`);
+  if (targetIds.has(id)) {
+    mapFound[key].add(id);
+    el.classList.add('pl-hit');
+    el.style.fill = REGIONS[key].color;
+    const chip = document.getElementById(`chip-${key}-${id}`);
+    if (chip) chip.classList.add('found');
+    document.getElementById(`progress-${key}`).textContent = `${mapFound[key].size} / ${REGIONS[key].mapTargets.length} nalezeno`;
+  } else if (el) {
+    el.classList.add('pl-shake');
+    setTimeout(() => el.classList.remove('pl-shake'), 300);
+  }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>initMaps();</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pracovní list – Oceánie | Zeměpisná dílna</title>
+<style>:root{--navy:#16497a;--ink:#1f2937;--muted:#64748b;--line:#e2e8f0;--ok:#2f9e57;--bad:#e2564f;--gold:#f5b942}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Verdana,Arial,sans-serif;margin:0;background:#f6f8fb;color:var(--ink)}
+header.top{background:linear-gradient(135deg,var(--navy),#1f6aa8);color:#fff;padding:22px 16px 18px;text-align:center}
+header.top h1{margin:0 0 4px;font-size:clamp(1.3rem,4.5vw,1.9rem)}
+header.top p{margin:0;font-size:.95rem;color:#d3e6f8}
+.wrap{max-width:1200px;margin:0 auto;padding:14px}
+.maprow{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:14px;align-items:start}
+@media(max-width:860px){.maprow{grid-template-columns:1fr}}
+.mapbox{background:#cfe7f7;border-radius:16px;border:2px solid #b5d4ea;overflow:hidden;position:relative}
+.mapbox svg{width:100%;height:auto;display:block}
+.cn0{fill:#e9edf2;stroke:#fff;stroke-width:.5}
+.cn1{stroke:#fff;stroke-width:.7;cursor:pointer;transition:filter .15s,fill .2s}
+.cn1:hover{filter:brightness(1.12)}
+.cn1.sel,.dot.sel{stroke:#16497a;stroke-width:2.2}
+.dot{stroke:#fff;stroke-width:1.4;cursor:pointer}
+.dot:hover{filter:brightness(1.15)}
+.cn1.good{fill:#3fb36b!important}.cn1.bad{fill:#e2564f!important}.dot.good{fill:#3fb36b!important}.dot.bad{fill:#e2564f!important}
+.lbl{font:600 11px 'Segoe UI',sans-serif;fill:#16497a;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(20,40,80,.06)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--muted);margin:10px 2px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.btn{font:600 .95rem 'Segoe UI',sans-serif;border:0;border-radius:12px;padding:10px 18px;background:var(--navy);color:#fff;cursor:pointer}
+.btn.alt{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn:hover{filter:brightness(1.1)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font:600 .8rem 'Segoe UI',sans-serif;padding:6px 11px;border-radius:99px;border:1.5px solid var(--c,#94a3b8);background:#fff;color:#334155;cursor:pointer}
+.chip:hover,.chip.sel{background:var(--c,#94a3b8);color:#fff}
+
+.tb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px}
+.sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 14px;box-shadow:0 2px 8px rgba(20,40,80,.05)}
+.sec h2{margin:0 0 4px;color:var(--navy);font-size:1.15rem}.sec .how{color:var(--muted);font-size:.88rem;margin-bottom:10px}
+.who{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin:0 0 12px;font-size:.95rem}.who span{border-bottom:1.5px solid #94a3b8;min-width:200px;display:inline-block;padding:0 4px}
+.cp{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 18px}
+.cp div{display:flex;align-items:baseline;gap:8px;font-size:1rem}.cp b{white-space:nowrap}.ln{flex:1;border-bottom:1.5px solid #94a3b8;min-height:1.5em;color:var(--ok);font-weight:700}
+.ln .ans{display:none}body.sol .ln .ans{display:inline}
+.cq{margin:0 0 12px;break-inside:avoid}.cq p{margin:0 0 4px;font-weight:600}.cq .o{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.95rem}.o span.right{}
+body.sol .o span.right{color:var(--ok);font-weight:800;text-decoration:underline}
+.tf{display:flex;gap:10px;align-items:baseline;margin:0 0 8px;break-inside:avoid}.tf .box{border:1.5px solid #94a3b8;border-radius:6px;min-width:34px;height:26px;text-align:center;font-weight:800;color:var(--ok);line-height:24px}
+.tf .box .ans{display:none}body.sol .tf .box .ans{display:inline}
+.oq{margin:0 0 14px;break-inside:avoid}.oq p{margin:0 0 4px;font-weight:600}.oq .lines{height:54px;background:repeating-linear-gradient(transparent 0 26px,#94a3b8 26px 27.5px)}
+.mapw{max-width:760px;margin:0 auto}.mapw .mapbox{background:#fff;border:1.5px solid #94a3b8}
+.mapw .cn0{fill:#f1f3f6}.mapw .cn1{cursor:default}
+.nn circle{fill:#16497a}.nn text{fill:#fff;font:700 13px 'Segoe UI',sans-serif;text-anchor:middle}
+.key{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px;margin-top:10px}.key div{display:flex;gap:8px;align-items:baseline}.key b{display:inline-block;background:var(--navy);color:#fff;border-radius:50%;min-width:22px;height:22px;text-align:center;font-size:.8rem;line-height:22px}
+.key .ln .ans{display:none}
+@media print{.tb,header.top p{display:none}header.top{background:none;color:#000;padding:4px}body{background:#fff}.sec{box-shadow:none;break-inside:avoid;border-color:#bbb}.wrap{padding:0}}
+</style></head><body>
+<header class="top"><h1>📝 Pracovní list – Oceánie</h1><p>Vyplň online nebo si ho vytiskni. Řešení se zobrazí tlačítkem.</p></header>
+<div class="tb"><button class="btn" onclick="window.print()">🖨️ Vytisknout</button><button class="btn alt" id="solb">👁️ Zobrazit řešení</button></div>
+<div class="wrap">
+ <div class="who"><div>Jméno: <span>&nbsp;</span></div><div>Třída: <span style="min-width:90px">&nbsp;</span></div><div>Datum: <span style="min-width:110px">&nbsp;</span></div></div>
+ <div class="sec"><h2>1 · Pojmenuj státy na mapě</h2><div class="how">Podle čísel napiš do seznamu pod mapou název státu (použij atlas).</div>
+  <div class="mapw"><div class="mapbox" id="map"><div style="padding:60px;text-align:center;color:#64748b">Načítám mapu…</div></div></div>
+  <div class="key" id="key"></div></div>
+ <div class="sec"><h2>2 · Doplň hlavní města</h2><div class="how">Ke každému státu napiš jeho hlavní město.</div><div class="cp" id="cap"></div></div>
+ <div class="sec"><h2>3 · Zakroužkuj správnou odpověď</h2><div class="how">Vždy je správná jen jedna možnost.</div><div id="closed"></div></div>
+ <div class="sec"><h2>4 · Pravda, nebo nepravda?</h2><div class="how">Do čtverečku napiš <b>P</b> (pravda) nebo <b>N</b> (nepravda).</div><div id="tf"></div></div>
+ <div class="sec"><h2>5 · Odpověz vlastními slovy</h2><div id="open"></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+const WORLD_URL='https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
+const NS='http://www.w3.org/2000/svg';
+async function buildMap(cfg){
+  const t=await (await fetch(WORLD_URL)).json();
+  const feats=topojson.feature(t,t.objects.countries).features.filter(f=>f.properties.name!=='Antarctica');
+  const W=960,H=cfg.h||560;
+  const proj=d3.geoNaturalEarth1().rotate([-(cfg.cx||0),0]);
+  const [[x0,y0],[x1,y1]]=cfg.box; const mp={type:'MultiPoint',coordinates:[[x0,y0],[x1,y0],[x0,y1],[x1,y1]]};
+  proj.fitExtent([[8,8],[W-8,H-8]],mp);
+  const path=d3.geoPath(proj);
+  const svg=d3.select(cfg.el).append('svg').attr('viewBox','0 0 '+W+' '+H);
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#cfe7f7');
+  const byId={};cfg.items.forEach(i=>byId[i.id]=i);
+  const g=svg.append('g');
+  const inIds=new Set(cfg.items.map(i=>i.id));
+  const idOf=f=>(f.properties.name==='Ashmore and Cartier Is.')?'x':f.id;
+  g.selectAll('path.cn0').data(feats.filter(f=>!inIds.has(idOf(f))||f.properties.name==='Ashmore and Cartier Is.')).join('path').attr('class','cn0').attr('d',path);
+  const api={svg,proj,path,els:{},dots:{},items:cfg.items,byId};
+  g.selectAll('path.cn1').data(feats.filter(f=>inIds.has(idOf(f))&&f.properties.name!=='Ashmore and Cartier Is.')).join('path')
+    .attr('class','cn1').attr('d',path).attr('fill',f=>byId[f.id].color).attr('data-id',f=>f.id)
+    .each(function(f){api.els[f.id]=this}).on('click',(e,f)=>cfg.onPick&&cfg.onPick(f.id));
+  // tečky pro mikrostáty
+  Object.keys(cfg.dots||{}).forEach(id=>{ if(!byId[id])return; const p=proj(cfg.dots[id]); if(!p)return;
+    const c=svg.append('circle').attr('class','dot').attr('cx',p[0]).attr('cy',p[1]).attr('r',cfg.dotR||6).attr('fill',byId[id].color).attr('data-id',id).on('click',()=>cfg.onPick&&cfg.onPick(id));
+    api.dots[id]=c.node(); });
+  api.nodes=id=>[api.els[id],api.dots[id]].filter(Boolean);
+  api.mark=(id,cls)=>api.nodes(id).forEach(n=>n.classList.add(cls));
+  api.unmark=(cls)=>svg.selectAll('.'+cls).classed(cls,false);
+  api.clear=()=>svg.selectAll('.sel,.good,.bad').classed('sel',false).classed('good',false).classed('bad',false);
+  api.pulse=id=>{api.nodes(id).forEach(n=>{n.animate([{opacity:1},{opacity:.3},{opacity:1},{opacity:.3},{opacity:1}],{duration:900})})};
+  api.label=(id,text)=>{const n=api.els[id];let p; if(n){p=path.centroid(n.__data__)}else if(cfg.dots[id])p=proj(cfg.dots[id]);if(!p)return;svg.append('text').attr('class','lbl').attr('x',p[0]).attr('y',p[1]+(n?4:-9)).attr('text-anchor','middle').text(text)};
+  return api;
+}
+function legendHTML(regs){return regs.map(r=>'<span><i style="background:'+r.color+'"></i>'+r.name+'</span>').join('')}
+function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const fmt=n=>typeof n==='number'?n.toLocaleString('cs-CZ'):n;
+
+const C={"items": [{"id": "036", "cs": "Austrálie", "cap": "Canberra", "region": "Austrálie a Nový Zéland", "area": 7692000, "pop": 26.5, "cur": "australský dolar", "lang": "angličtina", "fact": "Je nejmenším kontinentem i šestým největším státem světa.", "color": "#2f8fd0"}, {"id": "554", "cs": "Nový Zéland", "cap": "Wellington", "region": "Austrálie a Nový Zéland", "area": 268000, "pop": 5.2, "cur": "novozélandský dolar", "lang": "angličtina, maorština", "fact": "Žije tu víc ovcí než lidí a natáčel se tu Pán prstenů.", "color": "#2f8fd0"}, {"id": "598", "cs": "Papua-Nová Guinea", "cap": "Port Moresby", "region": "Melanésie", "area": 463000, "pop": 10, "cur": "kina", "lang": "angličtina, tok pisin", "fact": "Mluví se tu přes 800 jazyků, což je nejvíc na světě.", "color": "#2fa36b"}, {"id": "242", "cs": "Fidži", "cap": "Suva", "region": "Melanésie", "area": 18300, "pop": 0.93, "cur": "fidžijský dolar", "lang": "angličtina, fidžijština", "fact": "Má více než 330 ostrovů, obydlená je jen asi třetina.", "color": "#2fa36b"}, {"id": "090", "cs": "Šalamounovy ostrovy", "cap": "Honiara", "region": "Melanésie", "area": 28900, "pop": 0.7, "cur": "šalamounský dolar", "lang": "angličtina", "fact": "Při bitvě o Guadalcanal šlo za 2. světové války o osud Pacifiku.", "color": "#2fa36b"}, {"id": "548", "cs": "Vanuatu", "cap": "Port Vila", "region": "Melanésie", "area": 12200, "pop": 0.33, "cur": "vatu", "lang": "bislama, angličtina, francouzština", "fact": "Na ostrově Pentecost vznikl původní bungee jumping (land diving).", "color": "#2fa36b"}, {"id": "296", "cs": "Kiribati", "cap": "Tarawa", "region": "Mikronésie", "area": 811, "pop": 0.13, "cur": "australský dolar", "lang": "angličtina, kiribatština", "fact": "Jako jediný stát leží na všech čtyřech polokoulích.", "color": "#d9783a"}, {"id": "583", "cs": "Mikronésie", "cap": "Palikir", "region": "Mikronésie", "area": 702, "pop": 0.11, "cur": "americký dolar", "lang": "angličtina", "fact": "Tvoří přes 600 ostrovů ve čtyřech spolkových státech.", "color": "#d9783a"}, {"id": "584", "cs": "Marshallovy ostrovy", "cap": "Majuro", "region": "Mikronésie", "area": 181, "pop": 0.04, "cur": "americký dolar", "lang": "marshallština, angličtina", "fact": "Na atolu Bikini se v 50. letech zkoušely atomové bomby.", "color": "#d9783a"}, {"id": "585", "cs": "Palau", "cap": "Ngerulmud", "region": "Mikronésie", "area": 459, "pop": 0.02, "cur": "americký dolar", "lang": "palauština, angličtina", "fact": "Je známé Skalními ostrovy a jezerem s medúzami, které nežahnou.", "color": "#d9783a"}, {"id": "520", "cs": "Nauru", "cap": "Yaren", "region": "Mikronésie", "area": 21, "pop": 0.01, "cur": "australský dolar", "lang": "nauruština, angličtina", "fact": "Je nejmenším ostrovním státem a třetím nejmenším státem světa.", "color": "#d9783a"}, {"id": "882", "cs": "Samoa", "cap": "Apia", "region": "Polynésie", "area": 2840, "pop": 0.22, "cur": "tala", "lang": "samojština, angličtina", "fact": "Jako první stát světa vstupuje do nového dne, v roce 2011 přeskočilo datum o den.", "color": "#8e5bd0"}, {"id": "776", "cs": "Tonga", "cap": "Nukuʻalofa", "region": "Polynésie", "area": 747, "pop": 0.1, "cur": "paʻanga", "lang": "tongánština, angličtina", "fact": "Je jedinou polynéskou monarchií, která nebyla nikdy kolonií.", "color": "#8e5bd0"}, {"id": "798", "cs": "Tuvalu", "cap": "Funafuti", "region": "Polynésie", "area": 26, "pop": 0.011, "cur": "australský dolar", "lang": "tuvalština, angličtina", "fact": "Hrozí mu zatopení kvůli stoupající hladině moří.", "color": "#8e5bd0"}], "dots": {"242": [178, -17.8], "090": [160, -9.6], "548": [167.5, -16.2], "296": [173, 1.4], "583": [158.2, 6.9], "584": [171, 7.1], "585": [134.5, 7.5], "520": [166.9, -0.53], "882": [-172.2, -13.6], "776": [-175.2, -21.2], "798": [179.2, -8.5]}, "box": [[108, -48], [190, 14]], "cx": 150, "h": 500, "map": ["036", "554", "598", "242", "090", "548", "296", "584", "882", "776"], "caps": [["Austrálie", "Canberra"], ["Nový Zéland", "Wellington"], ["Papua-Nová Guinea", "Port Moresby"], ["Fidži", "Suva"], ["Vanuatu", "Port Vila"], ["Samoa", "Apia"], ["Tonga", "Nukuʻalofa"], ["Kiribati", "Tarawa"], ["Šalamounovy ostrovy", "Honiara"], ["Palau", "Ngerulmud"], ["Nauru", "Yaren"], ["Tuvalu", "Funafuti"]], "closed": [{"q": "Největším státem Oceánie je", "o": ["Nový Zéland", "Austrálie", "Papua-Nová Guinea", "Fidži"], "a": 1}, {"q": "Původní obyvatelé Austrálie se nazývají", "o": ["Maorové", "Aboriginci", "Inuité", "Inkové"], "a": 1}, {"q": "Symbolem Nového Zélandu je nelétavý pták", "o": ["emu", "tučňák", "kiwi", "kasuár"], "a": 2}, {"q": "Největší korálový útes světa leží u pobřeží", "o": ["Nového Zélandu", "Austrálie", "Fidži", "Samoy"], "a": 1}, {"q": "Ostrovní Oceánie se tradičně dělí na Melanésii, Polynésii a", "o": ["Mikronésii", "Indonésii", "Malajsii", "Makaronésii"], "a": 0}, {"q": "Hlavním městem Austrálie je", "o": ["Sydney", "Melbourne", "Canberra", "Perth"], "a": 2}, {"q": "Hlavním městem státu Nový Zéland je", "o": ["Wellington", "Tarawa", "Port Moresby", "Funafuti"], "a": 0}, {"q": "Hlavním městem státu Tuvalu je", "o": ["Port Vila", "Majuro", "Canberra", "Funafuti"], "a": 3}, {"q": "Hlavním městem státu Kiribati je", "o": ["Ngerulmud", "Tarawa", "Palikir", "Suva"], "a": 1}], "tf": [["Sydney je hlavním městem Austrálie.", 0], ["Nový Zéland leží v Atlantském oceánu.", 0], ["Klokani žijí původně v Austrálii.", 1], ["Uluru je posvátná hora původních obyvatel Austrálie.", 1], ["Fidži patří do Melanésie.", 1], ["V Papui-Nové Guineji se mluví stovkami různých jazyků.", 1]], "open": ["Proč žije v Austrálii tolik živočichů, které nenajdeš nikde jinde?", "Najdi v atlasu tři státy Polynésie a napiš jejich hlavní města.", "Proč hrozí státům Tuvalu a Kiribati, že je zatopí moře?", "Na které polokouli leží Austrálie a jak to ovlivňuje roční období?", "Co víš o Velkém bariérovém útesu? Napiš dvě informace."]};
+const $=id=>document.getElementById(id);
+$('solb').onclick=()=>{const on=document.body.classList.toggle('sol');$('solb').textContent=on?'🙈 Skrýt řešení':'👁️ Zobrazit řešení'};
+$('cap').innerHTML=C.caps.map(c=>'<div><b>'+c[0]+'</b><span class="ln"><span class="ans">'+c[1]+'</span></span></div>').join('');
+const L='ABCD';
+$('closed').innerHTML=C.closed.map((q,i)=>'<div class="cq"><p>'+(i+1)+'. '+q.q+'</p><div class="o">'+q.o.map((o,j)=>'<span'+(j===q.a?' class="right"':'')+'>'+L[j]+') '+o+'</span>').join('')+'</div></div>').join('');
+$('tf').innerHTML=C.tf.map((t,i)=>'<div class="tf"><div class="box"><span class="ans">'+(t[1]?'P':'N')+'</span></div><div>'+t[0]+'</div></div>').join('');
+$('open').innerHTML=C.open.map((t,i)=>'<div class="oq"><p>'+(i+1)+'. '+t+'</p><div class="lines"></div></div>').join('');
+$('key').innerHTML=C.map.map((id,i)=>{const it=C.items.find(x=>x.id===id);return '<div><b>'+(i+1)+'</b><span class="ln"><span class="ans">'+it.cs+'</span></span></div>'}).join('');
+const items=C.items.map(i=>Object.assign({},i,{color:C.map.includes(i.id)?'#fde9b8':'#f1f3f6'}));
+buildMap({el:'#map',items:items,dots:C.dots,box:C.box,cx:C.cx,h:C.h,dotR:7,onPick:()=>{}}).then(m=>{document.querySelector('#map > div').remove();
+  const g=m.svg.append('g').attr('class','nn');
+  C.map.forEach((id,i)=>{let p; if(m.els[id]){const n=m.els[id].__data__;p=m.path.centroid(n); if(id==='840'||id==='124'||id==='643')p=m.path.centroid(n)} else if(C.dots[id])p=m.proj(C.dots[id]);
+    if(!p||isNaN(p[0]))return; g.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',11);g.append('text').attr('x',p[0]).attr('y',p[1]+4.5).text(i+1)})
+ }).catch(()=>{$('map').innerHTML='<div style="padding:50px;text-align:center;color:#64748b">Mapu se nepodařilo načíst (chybí internet). Ostatní úkoly fungují.</div>'});
+</script></body></html>

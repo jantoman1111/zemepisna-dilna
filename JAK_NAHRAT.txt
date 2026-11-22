@@ -1,0 +1,15 @@
+JAK NAHRÁT NOVÉ HRY NA NETLIFY
+================================
+Tato složka obsahuje 4 soubory:
+  index.html                 (upravená úvodní stránka – nové karty, panely a filtr "Hry")
+  hadej_zemi_silueta.html    (hra)
+  cesta_kolem_sveta.html     (hra)
+  zemepisne_piskvorky.html   (hra)
+
+DŮLEŽITÉ: Netlify při nahrání složky přes "drag and drop" nahradí celý web.
+Proto:
+  1) Otevři svou stávající složku s webem (kde máš všechny soubory: atlas-evropy.html,
+     kraje_testy.html, afrika_interaktivni_hra.html atd.).
+  2) Zkopíruj do ní všechny 4 soubory z této složky (index.html přepiš).
+  3) Nahraj CELOU složku na Netlify (Deploys -> přetáhni složku).
+Po nahrání se na úvodní stránce objeví tlačítko "Hry" a tři nové karty.

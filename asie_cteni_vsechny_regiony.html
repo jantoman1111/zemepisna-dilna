@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asie – Čtení s porozuměním</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #f5f0e8; --surface: #fffef9; --text: #1c1c1c; --muted: #6b6558; --border: #ddd5c4; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1.5rem 5rem; }
+
+  .region-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .rtab { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.4rem; border-radius: 99px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--surface); color: var(--muted); }
+  .rtab:hover { transform: translateY(-1px); }
+  .rtab.active { color: #fff; }
+
+  .c-east      { --rc: #b5342a; } .rtab.c-east.active      { background: #b5342a; border-color: #b5342a; }
+  .c-southeast { --rc: #1a8a6a; } .rtab.c-southeast.active { background: #1a8a6a; border-color: #1a8a6a; }
+  .c-south     { --rc: #d9822b; } .rtab.c-south.active     { background: #d9822b; border-color: #d9822b; }
+  .c-central   { --rc: #2a7a8a; } .rtab.c-central.active   { background: #2a7a8a; border-color: #2a7a8a; }
+  .c-southwest { --rc: #b58a2a; } .rtab.c-southwest.active { background: #b58a2a; border-color: #b58a2a; }
+
+  .region-panel { display: none; max-width: 900px; margin: 0 auto; }
+  .region-panel.visible { display: block; }
+
+  header { text-align: center; margin-bottom: 1.5rem; }
+  .stripes { display: flex; justify-content: center; margin-bottom: 0.8rem; }
+  .stripe { height: 5px; width: 60px; }
+  .s1 { border-radius: 3px 0 0 3px; }
+  .s3 { border-radius: 0 3px 3px 0; }
+  h1 { font-family: 'Sora', sans-serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.9rem; color: var(--muted); }
+
+  .text-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+  .text-label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 5px; padding: 2px 9px; margin-bottom: 1rem; }
+  .chapters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .chap-btn { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.9rem; cursor: pointer; color: var(--muted); transition: all 0.12s; }
+  .chap-btn:hover:not(.active) { background: #ede8df; }
+  .chapter-content { display: none; }
+  .chapter-content.visible { display: block; }
+  h2 { font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+  .text-body { font-family: 'Lora', Georgia, serif; font-size: 0.97rem; line-height: 1.85; color: #2a2720; }
+  .text-body p { margin-bottom: 0.9rem; }
+  .text-body p:last-child { margin-bottom: 0; }
+  .highlight { border-left: 3px solid; padding: 0.7rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-style: italic; background: #fef9ee; color: #5a4a20; font-size: 0.92rem; }
+
+  .score-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap; }
+  .score-big { font-family: 'Sora', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .score-info { font-size: 0.85rem; color: var(--muted); }
+  .progress-wrap { flex: 1; min-width: 100px; }
+  .progress-track { background: var(--border); border-radius: 99px; height: 7px; }
+  .progress-fill { height: 7px; border-radius: 99px; transition: width 0.5s; }
+  .btn-reset { font-size: 0.85rem; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 1rem; cursor: pointer; color: var(--muted); }
+  .btn-reset:hover { background: var(--bg); }
+
+  .questions-title { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.9rem; }
+  .questions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1rem; }
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 1.1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+  .qcard.answered-correct { border-color: #1a7a4a; box-shadow: 0 0 0 3px rgba(26,122,74,0.08); }
+  .qcard.answered-wrong { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,0.08); }
+  .qcard-top { display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 0.8rem; }
+  .qnum { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; min-width: 26px; padding-top: 1px; }
+  .qmeta { flex: 1; }
+  .cat-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); border-radius: 4px; padding: 1px 7px; margin-bottom: 0.35rem; }
+  .qtext { font-size: 0.93rem; font-weight: 500; line-height: 1.45; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .opt { font-family: 'DM Sans', sans-serif; font-size: 0.84rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer; text-align: left; color: var(--text); transition: background 0.1s, transform 0.1s; line-height: 1.35; }
+  .opt:hover:not(:disabled) { background: #eee9de; border-color: #bbb3a2; transform: translateY(-1px); }
+  .opt:disabled { cursor: default; }
+  .opt.correct { background: #d4eddf; border-color: #1a7a4a; color: #145235; font-weight: 500; }
+  .opt.wrong { background: #fde8e6; border-color: #c0392b; color: #7a1e16; }
+  .explain { margin-top: 0.7rem; font-size: 0.81rem; line-height: 1.5; border-radius: 7px; padding: 0.55rem 0.8rem; display: none; }
+  .explain.show-c { display: block; background: #d4eddf; color: #145235; }
+  .explain.show-w { display: block; background: #fde8e6; color: #7a1e16; }
+
+  footer { text-align: center; margin-top: 3rem; font-size: 0.78rem; color: var(--border); }
+  @media (max-width: 480px) { .questions-grid { grid-template-columns: 1fr; } .opts { grid-template-columns: 1fr; } .text-card { padding: 1.1rem; } }
+
+  .print-btn { position: fixed; bottom: 20px; right: 20px; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1.3rem; border-radius: 10px; border: none; background: #2a2720; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.15); z-index: 20; }
+
+  @media print {
+    .region-tabs, .print-btn, .chapters, .btn-reset { display: none !important; }
+    .region-panel { display: block !important; page-break-after: always; }
+    .region-panel:last-child { page-break-after: auto; }
+    body { background: #fff; padding: .5rem .8rem; font-size: 13px; }
+    header { margin-bottom: .5rem; }
+    h1 { font-size: 1.3rem; }
+    .subtitle { font-size: .75rem; }
+
+    .chapter-content { display: block !important; page-break-inside: avoid; margin-bottom: .7rem; padding-bottom: .7rem; border-bottom: 1px solid #ddd; }
+    .chapter-content:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .text-card { padding: .8rem 1rem; margin-bottom: .6rem; }
+    .text-label { display: none; }
+    h2 { font-size: .95rem; margin-bottom: .4rem; }
+    .text-body { font-size: .78rem; line-height: 1.55; }
+    .text-body p { margin-bottom: .5rem; }
+    .highlight { font-size: .74rem; padding: .4rem .6rem; margin: .5rem 0; }
+
+    .score-bar { display: none; }
+
+    /* Kvíz vždy na nové stránce, samostatně - dostane celou stránku */
+    .questions-title { page-break-before: always; font-size: 1rem; margin-bottom: .6rem; padding-top: .3rem; }
+    .questions-grid { grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .qcard { padding: .8rem 1rem; break-inside: avoid; }
+    .qcard-top { margin-bottom: .45rem; gap: .5rem; }
+    .qnum { font-size: 1rem; min-width: 24px; }
+    .cat-tag { font-size: .65rem; padding: 2px 7px; margin-bottom: .3rem; }
+    .qtext { font-size: .85rem; line-height: 1.4; }
+    .opts { gap: 7px; }
+    .opt { padding: .45rem .7rem; font-size: .78rem; }
+    .explain { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; margin-bottom:1.5rem; padding-top:0.5rem;">
+  <div style="font-family:'Sora',sans-serif; font-size:clamp(1.4rem,4vw,2rem); font-weight:700; margin-bottom:0.2rem;">ASIE – Čtení s porozuměním</div>
+  <div style="font-size:0.9rem; color:var(--muted);">Zeměpis · vyberte region</div>
+</div>
+
+<div class="region-tabs">
+  <button class="rtab c-east active" onclick="showRegion('east',this)">🏯 Východní Asie</button>
+  <button class="rtab c-southeast" onclick="showRegion('southeast',this)">🌴 Jihovýchodní Asie</button>
+  <button class="rtab c-south" onclick="showRegion('south',this)">🐘 Jižní Asie</button>
+  <button class="rtab c-central" onclick="showRegion('central',this)">🐫 Střední Asie</button>
+  <button class="rtab c-southwest" onclick="showRegion('southwest',this)">🕌 Jihozápadní Asie</button>
+</div>
+
+<!-- ═══════════════ VÝCHODNÍ ASIE ═══════════════ -->
+<div class="region-panel visible" id="panel-east">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#b5342a"></div><div class="stripe" style="background:#d96a5a"></div><div class="stripe s3" style="background:#f0b0a0"></div></div>
+    <h1>Východní Asie</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#b5342a;border-color:#e8c0b8;background:#fbeae6;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('east',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('east',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('east',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('east',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="east-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Východní Asie zahrnuje nejlidnatější oblast planety – <strong>Čínu</strong>, <strong>Japonsko</strong>, <strong>Jižní Koreu</strong>, <strong>Severní Koreu</strong>, <strong>Mongolsko</strong> a <strong>Tchaj-wan</strong>.</p>
+        <p>Hlavní města: <strong>Peking</strong> (Čína), <strong>Tokio</strong> (Japonsko), <strong>Soul</strong> (Jižní Korea), <strong>Pchjongjang</strong> (Severní Korea), <strong>Ulánbátar</strong> (Mongolsko) a <strong>Tchaj-pej</strong> (Tchaj-wan).</p>
+        <div class="highlight" style="border-color:#b5342a;">Čínská lidová republika je čtvrtým největším státem světa rozlohou a donedávna byla i nejlidnatější zemí planety – dnes ji počtem obyvatel předstihla Indie.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Na jihozápadě Číny leží nejvyšší pohoří světa – <strong>Himálaj</strong> s vrcholem <strong>Mount Everest</strong> (8 849 m) na hranici s Nepálem. Vnitrozemí Mongolska a severní Číny pokrývá poušť <strong>Gobi</strong>. Pobřežní oblasti Číny, Japonska a Koreje ovlivňuje <strong>monzunové podnebí</strong> s vlhkým a horkým létem.</p>
+        <div class="highlight" style="border-color:#b5342a;">Řeka Jang-c'-ťiang je nejdelší řekou Asie – měří přes 6 300 km a protéká středem Číny od Tibetu až po Šanghaj.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Čínská civilizace patří k nejstarším na světě a byla silně ovlivněna učením <strong>konfucianismu</strong> a <strong>taoismu</strong>. Japonsko bylo po staletí izolované od okolního světa a otevřelo se mu až v 19. století během tzv. <strong>Meidži restaurace</strong>. Po druhé světové válce byla Korea rozdělena na komunistický sever a demokratický jih.</p>
+        <div class="highlight" style="border-color:#b5342a;">Velká čínská zeď měří i s odbočkami přes 21 000 km a patří k nejznámějším a nejrozsáhlejším stavbám lidstva.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Čína je největším světovým exportérem zboží a bývá označována jako „<strong>světová továrna</strong>“. Japonsko a Jižní Korea vynikají vyspělými technologiemi a automobilovým průmyslem – jmenujme značky <strong>Toyota</strong>, <strong>Samsung</strong> nebo <strong>Hyundai</strong>.</p>
+        <div class="highlight" style="border-color:#b5342a;">Jižní Korea patří mezi světové lídry ve výrobě polovodičů a chytrých telefonů, které vyváží do celého světa.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="east-score" style="color:#b5342a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="east-prog" style="background:#b5342a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('east')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="east-qgrid"></div>
+</div>
+
+<!-- ═══════════════ JIHOVÝCHODNÍ ASIE ═══════════════ -->
+<div class="region-panel" id="panel-southeast">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#1a8a6a"></div><div class="stripe" style="background:#4ab090"></div><div class="stripe s3" style="background:#a0d8c0"></div></div>
+    <h1>Jihovýchodní Asie</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#1a8a6a;border-color:#b8ddd0;background:#eaf6f0;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('southeast',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('southeast',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('southeast',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('southeast',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="southeast-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Jihovýchodní Asie zahrnuje pevninské státy – <strong>Thajsko</strong>, <strong>Vietnam</strong>, <strong>Myanmar</strong>, <strong>Kambodžu</strong> a <strong>Laos</strong> – a ostrovní státy <strong>Indonésii</strong>, <strong>Filipíny</strong>, <strong>Malajsii</strong> a <strong>Singapur</strong>.</p>
+        <p>Hlavní města: <strong>Bangkok</strong> (Thajsko), <strong>Hanoj</strong> (Vietnam), <strong>Jakarta</strong> (Indonésie), <strong>Manila</strong> (Filipíny) a <strong>Kuala Lumpur</strong> (Malajsie).</p>
+        <div class="highlight" style="border-color:#1a8a6a;">Indonésie je největší ostrovní stát světa – tvoří ji více než 17 000 ostrovů.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southeast-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Region leží v tropickém pásu, převládá tu <strong>tropický deštný prales</strong> a <strong>monzunové podnebí</strong> se střídáním období dešťů a sucha. Ostrovní část leží na tzv. <strong>Ohnivém kruhu</strong> – pásu s vysokou sopečnou a seismickou aktivitou kolem Tichého oceánu.</p>
+        <div class="highlight" style="border-color:#1a8a6a;">Sopka Krakatoa v Indonésii při výbuchu v roce 1883 způsobila jednu z největších přírodních katastrof v zaznamenané historii.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southeast-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region je nábožensky i etnicky velmi rozmanitý – v Indonésii a Malajsii převažuje <strong>islám</strong>, v Thajsku a Myanmaru <strong>buddhismus</strong>, na Filipínách <strong>křesťanství</strong>. Většina států byla v minulosti evropskými koloniemi – Britů, Francouzů, Nizozemců i Španělů.</p>
+        <div class="highlight" style="border-color:#1a8a6a;">Indonésie je zemí s největším počtem muslimů na světě, přestože oficiálně není islámským státem.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southeast-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Klíčovou plodinou je <strong>rýže</strong>, pěstuje se i palma olejná, kaučukovník a koření. <strong>Singapur</strong> se navzdory malé rozloze stal jedním z hlavních světových finančních center. Významný je i cestovní ruch – pláže Thajska, chrámy Kambodže.</p>
+        <div class="highlight" style="border-color:#1a8a6a;">Singapur patří k nejbohatším státům světa, ačkoliv nemá téměř žádné nerostné suroviny.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="southeast-score" style="color:#1a8a6a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="southeast-prog" style="background:#1a8a6a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('southeast')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="southeast-qgrid"></div>
+</div>
+
+<!-- ═══════════════ JIŽNÍ ASIE ═══════════════ -->
+<div class="region-panel" id="panel-south">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#d9822b"></div><div class="stripe" style="background:#e8a860"></div><div class="stripe s3" style="background:#f5d0a0"></div></div>
+    <h1>Jižní Asie</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#d9822b;border-color:#f0d0a8;background:#fdf3e6;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('south',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('south',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('south',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('south',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="south-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Jižní Asie zahrnuje <strong>Indii</strong>, <strong>Pákistán</strong>, <strong>Bangladéš</strong>, <strong>Nepál</strong>, <strong>Srí Lanku</strong> a <strong>Bhútán</strong>.</p>
+        <p>Hlavní města: <strong>New Dillí</strong> (Indie), <strong>Islámábád</strong> (Pákistán), <strong>Dháka</strong> (Bangladéš), <strong>Káthmándú</strong> (Nepál) a <strong>Kolombo</strong> (Srí Lanka).</p>
+        <div class="highlight" style="border-color:#d9822b;">Indie je s více než 1,4 miliardy obyvatel v současnosti nejlidnatějším státem světa.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Na severu regionu se táhne pohoří <strong>Himálaj</strong> s nejvyšší horou světa Mount Everest. Regionem protéká posvátná řeka <strong>Ganga</strong>. Podnebí ovládají letní <strong>monzuny</strong> přinášející vydatné srážky, na nichž závisí zemědělství celého regionu.</p>
+        <div class="highlight" style="border-color:#d9822b;">Do Indického oceánu na jihu Indie a Srí Lanky zasahuje tropické klima, zatímco sever při Himálaji je chladný a horský.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>V regionu vznikl <strong>hinduismus</strong> i <strong>buddhismus</strong>. Do roku 1947 byla většina území britskou kolonií – tzv. <strong>Britskou Indií</strong> – která se při vyhlášení nezávislosti rozdělila na hinduistickou Indii a muslimský Pákistán.</p>
+        <div class="highlight" style="border-color:#d9822b;">Rozdělení Britské Indie v roce 1947 doprovázelo jedno z největších masových přesídlení v dějinách lidstva.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Indie má jeden z nejrychleji rostoucích <strong>IT sektorů</strong> světa, důležité je i zemědělství a textilní průmysl. <strong>Bangladéš</strong> patří mezi největší světové vývozce oděvů.</p>
+        <div class="highlight" style="border-color:#d9822b;">Indické město Bengalúru je pro svůj rozvinutý technologický sektor přezdíváno „indické Silicon Valley“.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="south-score" style="color:#d9822b">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="south-prog" style="background:#d9822b;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('south')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="south-qgrid"></div>
+</div>
+
+<!-- ═══════════════ STŘEDNÍ ASIE ═══════════════ -->
+<div class="region-panel" id="panel-central">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#2a7a8a"></div><div class="stripe" style="background:#5aa0b0"></div><div class="stripe s3" style="background:#a8d0da"></div></div>
+    <h1>Střední Asie</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#2a7a8a;border-color:#b8dae0;background:#eaf4f6;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('central',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('central',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('central',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('central',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="central-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Střední Asie zahrnuje pět tzv. „stanů“ – <strong>Kazachstán</strong>, <strong>Uzbekistán</strong>, <strong>Turkmenistán</strong>, <strong>Kyrgyzstán</strong> a <strong>Tádžikistán</strong>.</p>
+        <p>Hlavní města: <strong>Astana</strong> (Kazachstán), <strong>Taškent</strong> (Uzbekistán), <strong>Ašchabad</strong> (Turkmenistán), <strong>Biškek</strong> (Kyrgyzstán) a <strong>Dušanbe</strong> (Tádžikistán).</p>
+        <div class="highlight" style="border-color:#2a7a8a;">Kazachstán je největším vnitrozemským státem světa – nemá přímý přístup k oceánu.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Velkou část regionu pokrývají pouště <strong>Karakum</strong> a <strong>Kyzylkum</strong>, na východě se zvedají vysoká pohoří <strong>Ťan-šan</strong> a <strong>Pamír</strong>. Region má výrazně <strong>kontinentální podnebí</strong> s velkými rozdíly mezi horkým létem a mrazivou zimou.</p>
+        <div class="highlight" style="border-color:#2a7a8a;">Aralské jezero, kdysi čtvrté největší jezero světa, kvůli nadměrnému zavlažování bavlníkových polí za posledních padesát let vyschlo na zlomek původní rozlohy.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region proslavila starověká <strong>Hedvábná stezka</strong>, obchodní trasa spojující Čínu s Evropou. Většinu obyvatel tvoří turkicky mluvící národy vyznávající <strong>islám</strong>. Až do roku 1991 byl celý region součástí <strong>Sovětského svazu</strong>.</p>
+        <div class="highlight" style="border-color:#2a7a8a;">Města Samarkand a Buchara v Uzbekistánu patřila k nejvýznamnějším centrům na Hedvábné stezce.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Kazachstán</strong> a <strong>Turkmenistán</strong> těží velké zásoby ropy a zemního plynu. V <strong>Uzbekistánu</strong> má velký význam pěstování bavlny, tzv. „bílého zlata“.</p>
+        <div class="highlight" style="border-color:#2a7a8a;">Kazachstán patří k největším světovým producentům uranu.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="central-score" style="color:#2a7a8a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="central-prog" style="background:#2a7a8a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('central')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="central-qgrid"></div>
+</div>
+
+<!-- ═══════════════ JIHOZÁPADNÍ ASIE ═══════════════ -->
+<div class="region-panel" id="panel-southwest">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#b58a2a"></div><div class="stripe" style="background:#d0ac5a"></div><div class="stripe s3" style="background:#e8d0a0"></div></div>
+    <h1>Jihozápadní Asie</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#b58a2a;border-color:#e8d8b0;background:#fbf4e6;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('southwest',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('southwest',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('southwest',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('southwest',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="southwest-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Jihozápadní Asie, často nazývaná <strong>Blízký východ</strong>, zahrnuje <strong>Saúdskou Arábii</strong>, <strong>Irák</strong>, <strong>Írán</strong>, <strong>Turecko</strong>, <strong>Izrael</strong> a <strong>Spojené arabské emiráty</strong>.</p>
+        <p>Hlavní města: <strong>Rijád</strong> (Saúdská Arábie), <strong>Bagdád</strong> (Irák), <strong>Teherán</strong> (Írán), <strong>Ankara</strong> (Turecko) a <strong>Abú Dhabí</strong> (SAE).</p>
+        <div class="highlight" style="border-color:#b58a2a;">Turecko leží na dvou kontinentech – jeho menší evropská část zahrnuje i Istanbul, přesto většina území leží v Asii.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southwest-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Velkou část Arabského poloostrova pokrývá <strong>poušť</strong>. Mezi řekami <strong>Eufrat</strong> a <strong>Tigris</strong> v Iráku leží <strong>Mezopotámie</strong> – úrodná oblast, kde vznikly jedny z prvních civilizací. Na hranici Izraele a Jordánska leží <strong>Mrtvé moře</strong> – nejnižší místo na souši na Zemi.</p>
+        <div class="highlight" style="border-color:#b58a2a;">Hladina Mrtvého moře leží přibližně 430 metrů pod úrovní světového oceánu.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southwest-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region je kolébkou tří monoteistických náboženství – <strong>judaismu</strong>, <strong>křesťanství</strong> i <strong>islámu</strong>, který zde vznikl v 7. století. Mezopotámie bývá označována za „kolébku civilizace“ díky starověkým městským státům jako Ur nebo Babylon.</p>
+        <div class="highlight" style="border-color:#b58a2a;">Jeruzalém je svatým městem pro judaismus, křesťanství i islám zároveň.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="southwest-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Saúdská Arábie</strong> a <strong>Spojené arabské emiráty</strong> patří k největším světovým producentům a vývozcům <strong>ropy</strong>. <strong>Dubaj</strong> se z pouštního přístavu proměnila v moderní centrum obchodu, financí a turistiky.</p>
+        <div class="highlight" style="border-color:#b58a2a;">Dubaj hostí Burdž Chalífa – s výškou přes 828 metrů nejvyšší budovu světa.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="southwest-score" style="color:#b58a2a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="southwest-prog" style="background:#b58a2a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('southwest')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="southwest-qgrid"></div>
+</div>
+
+<script>
+const DATA = {
+  east: {
+    questions: [
+      { q: "Které město je hlavním městem Číny?", opts: ["A) Šanghaj","B) Peking","C) Hongkong","D) Kanton"], ans: 1, cat: "Hlavní města" },
+      { q: "Kde leží nejvyšší hora světa Mount Everest?", opts: ["A) Ural","B) Ťan-šan","C) Himálaj","D) Altaj"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jak se nazývá poušť ve vnitrozemí Mongolska a severní Číny?", opts: ["A) Sahara","B) Gobi","C) Karakum","D) Thár"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Kdy se Korea rozdělila na sever a jih?", opts: ["A) Před 1. sv. válkou","B) Po 2. sv. válce","C) V 90. letech 20. stol.","D) V roce 2000"], ans: 1, cat: "Dějiny" },
+      { q: "Jak se nazývá nejdelší řeka Asie?", opts: ["A) Chuang-che","B) Mekong","C) Jang-c'-ťiang","D) Amur"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jaké je hlavní město Japonska?", opts: ["A) Ósaka","B) Kjóto","C) Jokohama","D) Tokio"], ans: 3, cat: "Hlavní města" },
+      { q: "Jak dlouhá je přibližně Velká čínská zeď?", opts: ["A) asi 2 000 km","B) asi 8 000 km","C) přes 21 000 km","D) asi 50 000 km"], ans: 2, cat: "Dějiny" },
+      { q: "Které odvětví proslavilo zejména Jižní Koreu?", opts: ["A) Textilní průmysl","B) Polovodiče a technologie","C) Těžba ropy","D) Zemědělství"], ans: 1, cat: "Hospodářství" },
+    ]
+  },
+  southeast: {
+    questions: [
+      { q: "Které město je hlavním městem Indonésie?", opts: ["A) Bali","B) Jakarta","C) Surabaya","D) Bandung"], ans: 1, cat: "Hlavní města" },
+      { q: "Kolik ostrovů má přibližně Indonésie?", opts: ["A) asi 1 000","B) asi 5 000","C) přes 17 000","D) asi 50 000"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jak se nazývá pás vysoké sopečné aktivity kolem Tichého oceánu?", opts: ["A) Ohnivý kruh","B) Sopečný pás","C) Tichomořský val","D) Zemský prstenec"], ans: 0, cat: "Příroda" },
+      { q: "Které náboženství v Indonésii převažuje?", opts: ["A) Buddhismus","B) Hinduismus","C) Islám","D) Křesťanství"], ans: 2, cat: "Obyvatelstvo" },
+      { q: "Jaké je hlavní město Thajska?", opts: ["A) Bangkok","B) Chiang Mai","C) Phuket","D) Pattaya"], ans: 0, cat: "Hlavní města" },
+      { q: "Která plodina je pro region jihovýchodní Asie klíčová?", opts: ["A) Pšenice","B) Rýže","C) Brambory","D) Kukuřice"], ans: 1, cat: "Hospodářství" },
+      { q: "Který stát je přes malou rozlohu významným finančním centrem?", opts: ["A) Laos","B) Myanmar","C) Singapur","D) Kambodža"], ans: 2, cat: "Hospodářství" },
+      { q: "Která sopka způsobila katastrofu v roce 1883?", opts: ["A) Krakatoa","B) Merapi","C) Pinatubo","D) Tambora"], ans: 0, cat: "Příroda" },
+    ]
+  },
+  south: {
+    questions: [
+      { q: "Které město je hlavním městem Indie?", opts: ["A) Bombaj","B) Kalkata","C) New Dillí","D) Bengalúru"], ans: 2, cat: "Hlavní města" },
+      { q: "Který stát je v současnosti nejlidnatější na světě?", opts: ["A) Čína","B) Indie","C) USA","D) Indonésie"], ans: 1, cat: "Obyvatelstvo" },
+      { q: "Jak se nazývá posvátná řeka protékající severní Indií?", opts: ["A) Indus","B) Brahmaputra","C) Ganga","D) Godávarí"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Kdy se Britská Indie rozdělila na Indii a Pákistán?", opts: ["A) 1918","B) 1947","C) 1971","D) 1991"], ans: 1, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Pákistánu?", opts: ["A) Karáčí","B) Láhaur","C) Islámábád","D) Péšávar"], ans: 2, cat: "Hlavní města" },
+      { q: "Která náboženství vznikla v jižní Asii?", opts: ["A) Judaismus a islám","B) Hinduismus a buddhismus","C) Křesťanství a taoismus","D) Šintoismus a konfucianismus"], ans: 1, cat: "Obyvatelstvo" },
+      { q: "Čím je proslulé indické město Bengalúru?", opts: ["A) Textilním průmyslem","B) IT a technologiemi","C) Těžbou ropy","D) Rybolovem"], ans: 1, cat: "Hospodářství" },
+      { q: "Jaký typ větrů přináší regionu vydatné letní srážky?", opts: ["A) Pasáty","B) Monzuny","C) Bóra","D) Tornáda"], ans: 1, cat: "Podnebí" },
+    ]
+  },
+  central: {
+    questions: [
+      { q: "Které město je hlavním městem Kazachstánu?", opts: ["A) Almaty","B) Astana","C) Taškent","D) Biškek"], ans: 1, cat: "Hlavní města" },
+      { q: "Který stát je největším vnitrozemským státem světa?", opts: ["A) Mongolsko","B) Kazachstán","C) Uzbekistán","D) Turkmenistán"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Jak se nazývaly obchodní trasy spojující Čínu s Evropou?", opts: ["A) Jantarová stezka","B) Hedvábná stezka","C) Solná stezka","D) Královská cesta"], ans: 1, cat: "Dějiny" },
+      { q: "Které jezero kvůli nadměrnému zavlažování téměř vyschlo?", opts: ["A) Bajkal","B) Kaspické moře","C) Aralské jezero","D) Balchaš"], ans: 2, cat: "Příroda" },
+      { q: "Jaké je hlavní město Uzbekistánu?", opts: ["A) Buchara","B) Samarkand","C) Taškent","D) Chiva"], ans: 2, cat: "Hlavní města" },
+      { q: "Do kdy byl region součástí Sovětského svazu?", opts: ["A) 1985","B) 1989","C) 1991","D) 2001"], ans: 2, cat: "Dějiny" },
+      { q: "Která plodina se v Uzbekistánu nazývá „bílé zlato“?", opts: ["A) Rýže","B) Bavlna","C) Pšenice","D) Len"], ans: 1, cat: "Hospodářství" },
+      { q: "Čím je významný Kazachstán v těžbě surovin?", opts: ["A) Zlato a diamanty","B) Ropa a uran","C) Uhlí a železo","D) Měď a stříbro"], ans: 1, cat: "Hospodářství" },
+    ]
+  },
+  southwest: {
+    questions: [
+      { q: "Které město je hlavním městem Saúdské Arábie?", opts: ["A) Mekka","B) Rijád","C) Džidda","D) Medína"], ans: 1, cat: "Hlavní města" },
+      { q: "Jak se nazývá nejnižší místo na souši na Zemi?", opts: ["A) Kaspické moře","B) Mrtvé moře","C) Perský záliv","D) Rudé moře"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Které dvě řeky protékají Mezopotámií?", opts: ["A) Nil a Jordán","B) Eufrat a Tigris","C) Indus a Ganga","D) Amu-darja a Syr-darja"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Ve kterém století vznikl islám?", opts: ["A) 4. století","B) 5. století","C) 7. století","D) 10. století"], ans: 2, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Turecka?", opts: ["A) Istanbul","B) Izmir","C) Ankara","D) Antalya"], ans: 2, cat: "Hlavní města" },
+      { q: "Které svaté město je důležité pro tři náboženství zároveň?", opts: ["A) Mekka","B) Betlém","C) Jeruzalém","D) Damašek"], ans: 2, cat: "Obyvatelstvo" },
+      { q: "Jaká je hlavní vývozní surovina Saúdské Arábie?", opts: ["A) Zemní plyn","B) Ropa","C) Zlato","D) Fosfáty"], ans: 1, cat: "Hospodářství" },
+      { q: "Jak se jmenuje nejvyšší budova světa v Dubaji?", opts: ["A) Kingdom Tower","B) Burdž Chalífa","C) Emirates Tower","D) Dubai Frame"], ans: 1, cat: "Hospodářství" },
+    ]
+  }
+};
+
+const state = {};
+Object.keys(DATA).forEach(r => { state[r] = { answered: [], correct: [] }; resetRegion(r); });
+
+function resetRegion(r) {
+  const n = DATA[r].questions.length;
+  state[r] = { answered: new Array(n).fill(false), correct: new Array(n).fill(false) };
+  updateScore(r);
+  renderQuestions(r);
+}
+
+function updateScore(r) {
+  const s = state[r];
+  const c = s.correct.filter(Boolean).length;
+  const a = s.answered.filter(Boolean).length;
+  const n = DATA[r].questions.length;
+  document.getElementById(`${r}-score`).textContent = `${c}/${n}`;
+  document.getElementById(`${r}-prog`).style.width = Math.round((a / n) * 100) + '%';
+}
+
+function choose(r, qi, oi) {
+  if (state[r].answered[qi]) return;
+  state[r].answered[qi] = true;
+  const q = DATA[r].questions[qi];
+  const btns = document.querySelectorAll(`#${r}-opts-${qi} .opt`);
+  const expl = document.getElementById(`${r}-expl-${qi}`);
+  const card = document.getElementById(`${r}-card-${qi}`);
+  btns.forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.ans) b.classList.add('correct');
+    else if (idx === oi && oi !== q.ans) b.classList.add('wrong');
+  });
+  if (oi === q.ans) {
+    state[r].correct[qi] = true;
+    expl.textContent = '✓ Správně!';
+    expl.className = 'explain show-c';
+    card.classList.add('answered-correct');
+  } else {
+    expl.textContent = '✗ Špatně. Správná odpověď: ' + q.opts[q.ans].replace(/^[A-D]\) /, '');
+    expl.className = 'explain show-w';
+    card.classList.add('answered-wrong');
+  }
+  updateScore(r);
+}
+
+function renderQuestions(r) {
+  const qs = DATA[r].questions;
+  document.getElementById(`${r}-qgrid`).innerHTML = qs.map((q, qi) => `
+    <div class="qcard" id="${r}-card-${qi}">
+      <div class="qcard-top">
+        <div class="qnum">${qi + 1}</div>
+        <div class="qmeta">
+          <div class="cat-tag">${q.cat}</div>
+          <div class="qtext">${q.q}</div>
+        </div>
+      </div>
+      <div class="opts" id="${r}-opts-${qi}">
+        ${q.opts.map((o, oi) => `<button class="opt" onclick="choose('${r}',${qi},${oi})">${o}</button>`).join('')}
+      </div>
+      <div class="explain" id="${r}-expl-${qi}"></div>
+    </div>
+  `).join('');
+}
+
+function showRegion(r, btn) {
+  document.querySelectorAll('.region-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${r}`).classList.add('visible');
+  btn.classList.add('active');
+}
+
+function showChap(r, idx, btn) {
+  document.querySelectorAll(`#panel-${r} .chapter-content`).forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll(`#panel-${r} .chap-btn`).forEach(el => el.classList.remove('active'));
+  document.getElementById(`${r}-chap-${idx}`).classList.add('visible');
+  btn.classList.add('active');
+}
+</script>
+<button class="print-btn" onclick="window.print()">🖨 Vytisknout</button>
+</body>
+</html>

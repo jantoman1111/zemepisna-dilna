@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Pracovní listy — Kraje ČR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#EFE6D2; --parchment-dark:#E4D8BC; --ink:#2B2418; --ink-soft:#5B5240;
+    --forest:#3C5B45; --forest-dark:#2A4232; --rust:#B5533C; --gold:#B08A32; --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%), var(--parchment);
+    color:var(--ink); font-family:'Source Sans 3', sans-serif; min-height:100vh;
+  }
+  .wrap{ max-width:900px; margin:0 auto; padding:26px 20px 60px; }
+  header{ border-bottom:2px solid var(--line); padding-bottom:14px; margin-bottom:20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:700; font-size:clamp(24px,4vw,34px); margin:0 0 4px; color:var(--forest-dark); }
+  h1 span{ color:var(--rust); }
+  .subtitle{ margin:0; font-size:14.5px; color:var(--ink-soft); }
+  .hint{
+    background:var(--parchment-dark); border-left:3px solid var(--gold); border-radius:0 6px 6px 0;
+    padding:10px 14px; font-size:13.5px; margin-top:12px; color:var(--ink-soft);
+  }
+  .hint a{ color:var(--forest-dark); font-weight:600; }
+
+  .tabs{ display:flex; flex-wrap:wrap; gap:6px; margin:20px 0 22px; }
+  .tab{
+    font-family:'Source Sans 3',sans-serif; font-size:12.5px; font-weight:600; padding:6px 12px;
+    border-radius:99px; border:1.5px solid var(--line); background:rgba(255,255,255,0.4); color:var(--ink-soft);
+    cursor:pointer; transition:all .15s;
+  }
+  .tab:hover{ background:rgba(255,255,255,0.7); }
+  .tab.active{ background:var(--forest); border-color:var(--forest); color:var(--parchment); }
+
+  .sheet{ display:none; background:#FBF7EC; border:1px solid var(--line); border-radius:8px; padding:24px 26px; }
+  .sheet.active{ display:block; }
+
+  .sheet-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:16px; }
+  .sheet-eyebrow{ font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin:0 0 2px; }
+  .sheet-title{ font-family:'Fraunces', serif; font-weight:700; font-size:24px; margin:0; color:var(--forest-dark); }
+  .print-btn{
+    font-family:'Source Sans 3',sans-serif; font-size:12.5px; font-weight:600; padding:7px 14px;
+    border-radius:6px; border:1px solid var(--line); background:var(--parchment-dark); color:var(--ink); cursor:pointer; white-space:nowrap;
+  }
+  .print-btn:hover{ background:var(--gold); color:#fff; }
+
+  .intro-text{ font-size:14.5px; line-height:1.6; color:var(--ink); margin-bottom:18px; }
+
+  .section-label{
+    font-family:'Fraunces', serif; font-size:14px; font-weight:600; color:var(--forest-dark);
+    margin:20px 0 8px; display:flex; align-items:center; gap:7px;
+  }
+  .section-label::before{ content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block; }
+
+  .fill-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
+  @media (max-width:600px){ .fill-grid{ grid-template-columns:1fr; } }
+  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:3px; font-weight:600; }
+  .field input{
+    width:100%; font-family:'Source Sans 3',sans-serif; font-size:14px; padding:7px 10px;
+    border:none; border-bottom:1.5px dashed var(--line); background:transparent; color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-bottom-color:var(--rust); }
+
+  .qbox{ margin-bottom:14px; }
+  .qbox p{ font-size:14.5px; margin:0 0 6px; color:var(--ink); }
+  .qbox textarea{
+    width:100%; min-height:54px; font-family:'Source Sans 3',sans-serif; font-size:14px;
+    border:1px solid var(--line); border-radius:5px; background:rgba(255,255,255,0.5); padding:8px 10px; resize:vertical; color:var(--ink);
+  }
+  .qbox textarea:focus{ outline:none; border-color:var(--rust); }
+
+  .answers-toggle{
+    margin-top:20px; font-size:12.5px; font-weight:600; color:var(--forest-dark);
+    background:none; border:1px solid var(--line); border-radius:6px; padding:6px 12px; cursor:pointer;
+  }
+  .answers{
+    display:none; margin-top:12px; background:var(--parchment-dark); border-left:3px solid var(--forest);
+    border-radius:0 6px 6px 0; padding:12px 14px; font-size:13.5px; line-height:1.6; color:var(--ink-soft);
+  }
+  .answers.show{ display:block; }
+  .answers b{ color:var(--ink); }
+
+  @media print{
+    body{ background:#fff; }
+    .tabs, .print-btn, .answers-toggle, .hint{ display:none !important; }
+    .sheet{ display:block !important; border:none; padding:0; }
+    .sheet:not(.active){ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Pracovní listy — <span>Kraje ČR</span></h1>
+    <p class="subtitle">Vyber si kraj, doplň chybějící údaje a odpověz na otázky.</p>
+    <p class="hint">💡 Údaje, které neznáš, si vyhledej v materiálu <a href="atlas_kraju.html" target="_blank">Atlas krajů →</a></p>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="sheets"></div>
+</div>
+
+<script>
+const data = {
+  praha:{name:"Hlavní město Praha", intro:"Praha je hlavní město České republiky a zároveň jediný kraj, který tvoří jen jedno město. Leží na řece Vltavě zhruba uprostřed Čech.", answers:{capital:"Praha (je sama sobě krajem)", area:"496 km²", population:"≈ 1,38 mil.", highest:"Teleček, 399 m", river:"Vltava", attraction:"Pražský hrad / Karlův most"}, q1:"Proč si myslíš, že se právě Praha stala hlavním městem, a ne jiné velké město v Česku?", q2:"Vyjmenuj alespoň dvě věci, kvůli kterým Prahu navštěvují turisté z celého světa."},
+  stredocesky:{name:"Středočeský kraj", intro:"Středočeský kraj obklopuje Prahu ze všech stran, ale samotné hlavní město do něj administrativně nepatří. Je to plochou největší kraj Česka.", answers:{capital:"Praha (sídlo úřadu)", area:"11 015 km²", population:"≈ 1,42 mil.", highest:"Tok, 864 m", river:"Vltava, Labe, Sázava", attraction:"Hrad Karlštejn"}, q1:"Proč je zvláštní, že sídlo Středočeského kraje leží mimo jeho vlastní území?", q2:"Který velký automobilový výrobce sídlí v Mladé Boleslavi a proč si myslíš, že se tam usadil?"},
+  jihocesky:{name:"Jihočeský kraj", intro:"Jihočeský kraj je známý svou rybniční soustavou a hlubokými lesy Šumavy na hranici s Rakouskem a Německem.", answers:{capital:"České Budějovice", area:"10 057 km²", population:"≈ 640 tisíc", highest:"Plechý, 1 378 m", river:"Vltava", attraction:"Český Krumlov (UNESCO)"}, q1:"Proč se v jižních Čechách od středověku budovaly umělé rybníky? K čemu sloužily?", q2:"Co je podle tebe na Šumavě jedinečné ve srovnání s jinými českými pohořími?"},
+  plzensky:{name:"Plzeňský kraj", intro:"Plzeňský kraj proslul pivovarnictvím — právě tady vznikl světově známý styl piva zvaný pils.", answers:{capital:"Plzeň", area:"7 561 km²", population:"≈ 600 tisíc", highest:"Ostrý, 1 293 m", river:"Berounka", attraction:"Plzeňský Prazdroj"}, q1:"Co znamená, že se plzeňský styl piva dnes vaří po celém světě? Zkus najít jeden příklad zahraniční značky.", q2:"Jaký vliv mělo strojírenství (Škoda Plzeň) na rozvoj města?"},
+  karlovarsky:{name:"Karlovarský kraj", intro:"Nejmenší kraj Česka (mimo Prahu) je proslulý lázeňstvím — v Karlových Varech a Mariánských Lázních se léčí lidé už staletí.", answers:{capital:"Karlovy Vary", area:"3 314 km²", population:"≈ 290 tisíc", highest:"Klínovec, 1 244 m", river:"Ohře", attraction:"Lázně Karlovy Vary"}, q1:"Co jsou to lázně a proč lidé jezdí právě do Karlových Varů?", q2:"Krušné hory jsou památkou UNESCO kvůli hornické historii. Co si myslíš, že se tam těžilo?"},
+  ustecky:{name:"Ústecký kraj", intro:"Ústeckým krajem protéká Labe směrem k německé hranici — je to jediná velká řeka, která z Česka odtéká tímto směrem.", answers:{capital:"Ústí nad Labem", area:"5 335 km²", population:"≈ 800 tisíc", highest:"Loučná, 956 m", river:"Labe, Ohře", attraction:"Hrad Střekov"}, q1:"Kam až doputuje voda z Labe, než doteče do moře? Zkus to vysledovat na mapě.", q2:"Proč se v tomto kraji historicky těžilo hodně hnědého uhlí?"},
+  liberecky:{name:"Liberecký kraj", intro:"Liberecký kraj je proslulý sklářstvím a bižuterií a také horou Ještěd s neobvyklou stavbou vysílače.", answers:{capital:"Liberec", area:"3 163 km²", population:"≈ 440 tisíc", highest:"Kotel, 1 435 m", river:"Jizera, Lužická Nisa", attraction:"Ještěd"}, q1:"Jak si myslíš, že vypadá vysílač na Ještědu? Zkus ho popsat, než si ho vyhledáš.", q2:"Proč se v tomto kraji rozvinula výroba skla a bižuterie (drahokamové šperky ze skla)?"},
+  kralovehradecky:{name:"Královéhradecký kraj", intro:"V Královéhradeckém kraji leží Sněžka — nejvyšší hora celého Česka.", answers:{capital:"Hradec Králové", area:"4 759 km²", population:"≈ 550 tisíc", highest:"Sněžka, 1 603 m", river:"Labe, Orlice", attraction:"Krkonošský národní park"}, q1:"Co víš o Sněžce? Kolik měří a se kterým státem sdílí vrchol?", q2:"Proč jsou národní parky jako Krkonoše chráněné a co se v nich nesmí dělat?"},
+  pardubicky:{name:"Pardubický kraj", intro:"Pardubický kraj je známý perníkem a slavným koňským dostihem Velká pardubická.", answers:{capital:"Pardubice", area:"4 519 km²", population:"≈ 520 tisíc", highest:"Buková hora, 958 m", river:"Labe, Chrudimka", attraction:"Zámek Kunětická hora"}, q1:"Co je to steeplechase a proč je Velká pardubická tak náročný závod?", q2:"Litomyšl je zapsaná na seznamu UNESCO. Co podle tebe muselo město splnit, aby se tam dostalo?"},
+  vysocina:{name:"Kraj Vysočina", intro:"Vysočina leží uprostřed Česka mezi Čechami a Moravou a jako jediný kraj nemá krajské město ve svém názvu.", answers:{capital:"Jihlava", area:"6 796 km²", population:"≈ 505 tisíc", highest:"Javořice, 837 m", river:"Sázava, Svratka", attraction:"Telč (UNESCO)"}, q1:"Proč se tomuto kraji říká Vysočina, i když tam nejsou nejvyšší hory Česka?", q2:"Co dělá historické centrum Telče tak výjimečné, že je na seznamu UNESCO?"},
+  jihomoravsky:{name:"Jihomoravský kraj", intro:"Jižní Morava je největším centrem pěstování vína v Česku a Brno je druhé největší město země.", answers:{capital:"Brno", area:"7 195 km²", population:"≈ 1,19 mil.", highest:"Čupel, 575 m", river:"Morava, Dyje", attraction:"Lednicko-valtický areál"}, q1:"Proč se právě na jižní Moravě daří pěstování vinné révy lépe než jinde v Česku?", q2:"Co všechno může nabídnout velké univerzitní město jako Brno mladým lidem?"},
+  olomoucky:{name:"Olomoucký kraj", intro:"V Olomouckém kraji leží Praděd — druhá nejvyšší hora Česka v pohoří Jeseníky.", answers:{capital:"Olomouc", area:"5 271 km²", population:"≈ 630 tisíc", highest:"Praděd, 1 491 m", river:"Morava, Bečva", attraction:"Sloup Nejsvětější Trojice"}, q1:"Které dvě nejvyšší hory Česka znáš a ve kterých krajích leží?", q2:"Proč má Olomouc podle tebe tak velké a zachovalé historické centrum?"},
+  zlinsky:{name:"Zlínský kraj", intro:"Zlín přeměnil na začátku 20. století podnikatel Tomáš Baťa v moderní průmyslové město podle jednotného plánu.", answers:{capital:"Zlín", area:"3 964 km²", population:"≈ 570 tisíc", highest:"Čertův mlýn, 1 206 m", river:"Morava, Vsetínská Bečva", attraction:"Baťova architektura ve Zlíně"}, q1:"Co víš o firmě Baťa? Čím byla ve své době neobvyklá?", q2:"Co jsou to Beskydy a co se tam dá dělat v zimě i v létě?"},
+  moravskoslezsky:{name:"Moravskoslezský kraj", intro:"Moravskoslezský kraj byl srdcem těžkého průmyslu Československa — dnes se bývalé doly a hutě mění v kulturní centra.", answers:{capital:"Ostrava", area:"5 427 km²", population:"≈ 1,15 mil.", highest:"Lysá hora, 1 323 m", river:"Odra, Opava, Ostravice", attraction:"Dolní Vítkovice"}, q1:"Co se podle tebe stane s bývalými továrnami a doly, když se v nich přestane těžit a vyrábět?", q2:"Se kterými dvěma státy tento kraj sousedí?"}
+};
+
+const order = ["praha","stredocesky","jihocesky","plzensky","karlovarsky","ustecky","liberecky","kralovehradecky","pardubicky","vysocina","jihomoravsky","olomoucky","zlinsky","moravskoslezsky"];
+
+const tabsEl = document.getElementById("tabs");
+const sheetsEl = document.getElementById("sheets");
+
+order.forEach((id,i)=>{
+  const r = data[id];
+  const tab = document.createElement("button");
+  tab.className = "tab" + (i===0?" active":"");
+  tab.textContent = r.name.replace("Hlavní město ","").replace("Kraj ","");
+  tab.onclick = ()=>selectSheet(id);
+  tab.dataset.id = id;
+  tabsEl.appendChild(tab);
+
+  const sheet = document.createElement("div");
+  sheet.className = "sheet" + (i===0?" active":"");
+  sheet.id = "sheet-"+id;
+  sheet.innerHTML = `
+    <div class="sheet-top">
+      <div>
+        <p class="sheet-eyebrow">Pracovní list</p>
+        <h2 class="sheet-title">${r.name}</h2>
+      </div>
+      <button class="print-btn" onclick="window.print()">🖨 Vytisknout</button>
+    </div>
+    <p class="intro-text">${r.intro}</p>
+
+    <div class="section-label">Doplň údaje o kraji</div>
+    <div class="fill-grid">
+      <div class="field"><label>Krajské město</label><input type="text" placeholder="…"></div>
+      <div class="field"><label>Rozloha</label><input type="text" placeholder="…"></div>
+      <div class="field"><label>Počet obyvatel</label><input type="text" placeholder="…"></div>
+      <div class="field"><label>Nejvyšší bod</label><input type="text" placeholder="…"></div>
+      <div class="field"><label>Hlavní řeka</label><input type="text" placeholder="…"></div>
+      <div class="field"><label>Jedna zajímavost</label><input type="text" placeholder="…"></div>
+    </div>
+
+    <div class="section-label">Zamysli se</div>
+    <div class="qbox"><p>1. ${r.q1}</p><textarea></textarea></div>
+    <div class="qbox"><p>2. ${r.q2}</p><textarea></textarea></div>
+
+    <button class="answers-toggle" onclick="this.nextElementSibling.classList.toggle('show')">👁 Zobrazit odpovědi (pro učitele)</button>
+    <div class="answers">
+      <b>Krajské město:</b> ${r.answers.capital}<br>
+      <b>Rozloha:</b> ${r.answers.area}<br>
+      <b>Počet obyvatel:</b> ${r.answers.population}<br>
+      <b>Nejvyšší bod:</b> ${r.answers.highest}<br>
+      <b>Hlavní řeka:</b> ${r.answers.river}<br>
+      <b>Zajímavost:</b> ${r.answers.attraction}
+    </div>
+  `;
+  sheetsEl.appendChild(sheet);
+});
+
+function selectSheet(id){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.id===id));
+  document.querySelectorAll(".sheet").forEach(s=>s.classList.toggle("active", s.id==="sheet-"+id));
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+</script>
+</body>
+</html>

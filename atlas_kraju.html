@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Atlas krajů — Česká republika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#EFE6D2;
+    --parchment-dark:#E4D8BC;
+    --ink:#2B2418;
+    --ink-soft:#5B5240;
+    --forest:#3C5B45;
+    --forest-dark:#2A4232;
+    --rust:#B5533C;
+    --gold:#B08A32;
+    --line:#8A7A55;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(0,0,0,0.06), transparent 55%),
+      var(--parchment);
+    color:var(--ink);
+    font-family:'Source Sans 3', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:20px;
+    border-bottom:2px solid var(--line);
+    padding-bottom:16px;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    margin:0;
+    letter-spacing:0.3px;
+    color:var(--forest-dark);
+  }
+  h1 span{color:var(--rust);}
+  .subtitle{
+    margin:6px 0 0;
+    font-size:15px;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  .compass{ width:56px; height:56px; opacity:0.75; flex-shrink:0; }
+
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(320px,620px) minmax(300px,1fr);
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .map-card{
+    background:rgba(255,255,255,0.35);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px;
+    position:relative;
+  }
+  .map-card::before{
+    content:"";
+    position:absolute; inset:6px;
+    border:1px dashed rgba(138,122,85,0.55);
+    border-radius:4px;
+    pointer-events:none;
+  }
+  svg#map{ width:100%; height:auto; display:block; }
+
+  .hex{
+    fill:var(--forest);
+    stroke:var(--parchment);
+    stroke-width:2.5;
+    cursor:pointer;
+    transition:fill .15s ease, transform .15s ease;
+    transform-origin:center;
+  }
+  .hex:hover{ fill:#4E7157; }
+  .hex.active{ fill:var(--rust); }
+  .hex-praha{
+    fill:var(--gold);
+    stroke:var(--parchment);
+    stroke-width:2;
+    cursor:pointer;
+    transition:fill .15s ease;
+  }
+  .hex-praha:hover{ fill:#C79B3D; }
+  .hex-praha.active{ fill:var(--rust); }
+
+  .hexlabel{
+    font-family:'Source Sans 3', sans-serif;
+    font-size:10.5px;
+    font-weight:600;
+    fill:var(--parchment);
+    pointer-events:none;
+    text-anchor:middle;
+  }
+  .hexlabel.small{ font-size:8px; fill:var(--ink); }
+
+  .legend{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+
+  /* Detail panel */
+  .panel{
+    background:#FBF7EC;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:26px 26px 22px;
+    min-height:520px;
+  }
+  .panel-empty{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; height:100%; min-height:470px; color:var(--ink-soft);
+  }
+  .panel-empty svg{ width:64px; height:64px; margin-bottom:14px; opacity:0.5; }
+  .panel-empty p{ max-width:280px; line-height:1.5; }
+
+  .region-eyebrow{
+    font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--gold); font-weight:600; margin:0 0 4px;
+  }
+  .region-title{
+    font-family:'Fraunces', serif; font-weight:700; font-size:30px;
+    margin:0 0 2px; color:var(--forest-dark);
+  }
+  .region-capital{ font-size:14.5px; color:var(--ink-soft); margin:0 0 18px; }
+
+  .stat-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 16px;
+    padding:14px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    margin-bottom:18px;
+  }
+  .stat{ }
+  .stat .k{ font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:2px;}
+  .stat .v{ font-size:15px; font-weight:600; color:var(--ink); }
+
+  .section{ margin-bottom:16px; }
+  .section h3{
+    font-family:'Fraunces', serif; font-size:15px; font-weight:600;
+    color:var(--forest-dark); margin:0 0 6px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .section h3::before{
+    content:""; width:7px; height:7px; background:var(--rust); border-radius:50%; display:inline-block;
+  }
+  .section p, .section li{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0; }
+  .section ul{ margin:2px 0 0; padding-left:18px; }
+  .funfact{
+    background:var(--parchment-dark);
+    border-left:3px solid var(--rust);
+    padding:12px 14px; border-radius:0 4px 4px 0;
+    font-size:14px; font-style:italic; color:var(--ink-soft);
+  }
+
+  .close-btn{
+    display:none;
+  }
+  @media (max-width:860px){
+    .panel{ min-height:auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Atlas <span>krajů</span> — Česká republika</h1>
+      <p class="subtitle">Klikni na kraj v mapě a zobrazí se podrobné informace.</p>
+    </div>
+    <svg class="compass" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#5B5240" stroke-width="1.5"/>
+      <polygon points="50,8 58,50 50,44 42,50" fill="#B5533C"/>
+      <polygon points="50,92 58,50 50,56 42,50" fill="#5B5240"/>
+      <text x="50" y="8" text-anchor="middle" font-size="9" fill="#2B2418" font-family="Source Sans 3" font-weight="700">S</text>
+    </svg>
+  </header>
+
+  <div class="layout">
+    <div class="map-card">
+      <svg id="map" viewBox="0 0 610 370" xmlns="http://www.w3.org/2000/svg"></svg>
+      <p class="legend">14 krajů (13 krajů + hlavní město Praha) · schematické zobrazení, ne přesná mapa</p>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="panel-empty" id="panelEmpty">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#5B5240" stroke-width="2">
+          <path d="M32 4 L58 16 V48 L32 60 L6 48 V16 Z"/>
+          <path d="M32 4 V60 M6 16 L58 48 M58 16 L6 48"/>
+        </svg>
+        <p>Vyber kraj kliknutím na mapě vlevo a zobrazí se jeho krajské město, rozloha, obyvatelstvo, řeky, hory, ekonomika i zajímavosti.</p>
+      </div>
+      <div id="panelContent" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const regions = {
+  praha: {
+    name: "Hlavní město Praha", capital: "Praha (samo je krajem)",
+    area: "496 km²", population: "≈ 1,38 mil.", districts: "22 správních obvodů",
+    highest: "Teleček (399 m)", rivers: "Vltava",
+    neighbors: "Obklopena Středočeským krajem", cities: "Praha 1–22 (městské části)",
+    economy: "Služby, IT, cestovní ruch, sídlo vlády a úřadů, finančnictví.",
+    attractions: "Pražský hrad, Karlův most, Staroměstské náměstí, Vyšehrad — historické centrum je zapsáno na seznamu UNESCO.",
+    fact: "Praha je zdaleka nejlidnatějším městem Česka a zároveň jediným krajem, který tvoří jen jedno město."
+  },
+  stredocesky: {
+    name: "Středočeský kraj", capital: "Praha (sídlo krajského úřadu)",
+    area: "11 015 km² (největší kraj ČR)", population: "≈ 1,42 mil.", districts: "12 okresů",
+    highest: "Tok, 864 m (Brdy)", rivers: "Vltava, Labe, Sázava, Berounka",
+    neighbors: "Obklopuje Prahu, sousedí se 7 kraji", cities: "Kladno, Mladá Boleslav, Příbram, Kutná Hora",
+    economy: "Automobilový průmysl (Škoda Auto v Mladé Boleslavi), strojírenství, zemědělství.",
+    attractions: "Hrad Karlštejn, zámek Konopiště, historické centrum Kutné Hory (UNESCO).",
+    fact: "Středočeský kraj obklopuje Prahu ze všech stran, sám ale hlavní město administrativně nezahrnuje."
+  },
+  jihocesky: {
+    name: "Jihočeský kraj", capital: "České Budějovice",
+    area: "10 057 km²", population: "≈ 640 tisíc", districts: "7 okresů",
+    highest: "Plechý, 1 378 m (Šumava)", rivers: "Vltava, síť rybníků (Rožmberk)",
+    neighbors: "Sousedí s Rakouskem a Německem", cities: "Český Krumlov, Tábor, Písek, Strakonice",
+    economy: "Pivovarnictví (Budweiser Budvar), rybníkářství a chov ryb, turistický ruch.",
+    attractions: "Historické centrum Českého Krumlova (UNESCO), Národní park Šumava, hrad Hluboká.",
+    fact: "Jihočeská rybniční soustava kolem Třeboně patří k největším v Evropě — nejznámější je rybník Rožmberk."
+  },
+  plzensky: {
+    name: "Plzeňský kraj", capital: "Plzeň",
+    area: "7 561 km²", population: "≈ 600 tisíc", districts: "7 okresů",
+    highest: "Ostrý, 1 293 m (Šumava)", rivers: "Berounka (soutok Radbuzy, Úhlavy, Úslavy a Mže)",
+    neighbors: "Sousedí s Německem", cities: "Plzeň, Klatovy, Domažlice, Rokycany",
+    economy: "Pivovarnictví (Plzeňský Prazdroj), strojírenství (Škoda Plzeň), automobilový průmysl.",
+    attractions: "Plzeňský Prazdroj a pivovarské muzeum, chodský region Domažlicka, Šumava.",
+    fact: "Plzeň dala světu recept na světlý ležák — plzeňský typ piva (pils) se dnes vaří po celém světě."
+  },
+  karlovarsky: {
+    name: "Karlovarský kraj", capital: "Karlovy Vary",
+    area: "3 314 km² (nejmenší kraj mimo Prahu)", population: "≈ 290 tisíc", districts: "3 okresy",
+    highest: "Klínovec, 1 244 m (Krušné hory)", rivers: "Ohře, Teplá",
+    neighbors: "Sousedí s Německem", cities: "Karlovy Vary, Cheb, Sokolov, Mariánské Lázně",
+    economy: "Lázeňství, těžba hnědého uhlí, sklářství a porcelán (Moser).",
+    attractions: "Lázně Karlovy Vary a Mariánské Lázně, hrad Loket, Krušné hory (UNESCO — hornická krajina).",
+    fact: "Karlovy Vary založil podle pověsti sám český král a římský císař Karel IV. při lovu, když objevil horké prameny."
+  },
+  ustecky: {
+    name: "Ústecký kraj", capital: "Ústí nad Labem",
+    area: "5 335 km²", population: "≈ 800 tisíc", districts: "7 okresů",
+    highest: "Loučná, 956 m (Krušné hory)", rivers: "Labe, Ohře",
+    neighbors: "Sousedí s Německem", cities: "Ústí nad Labem, Most, Děčín, Litoměřice, Teplice",
+    economy: "Těžba hnědého uhlí, chemický a energetický průmysl.",
+    attractions: "Skalní útvary v Labských pískovcích, sopečné České středohoří, hrad Střekov.",
+    fact: "Přes Ústecký kraj protéká Labe a míří k hranici s Německem — tady opouští české území jako jediná velká řeka tímto směrem."
+  },
+  liberecky: {
+    name: "Liberecký kraj", capital: "Liberec",
+    area: "3 163 km²", population: "≈ 440 tisíc", districts: "4 okresy",
+    highest: "Kotel, 1 435 m (Krkonoše)", rivers: "Jizera, Lužická Nisa",
+    neighbors: "Sousedí s Německem a Polskem", cities: "Liberec, Jablonec nad Nisou, Česká Lípa",
+    economy: "Sklářství a bižuterie (Jablonec nad Nisou), textilní průmysl, cestovní ruch.",
+    attractions: "Rozhledna a hora Ještěd, skalní města Českého ráje (UNESCO geopark), Krkonoše.",
+    fact: "Ještěd s unikátní hyperboloidní stavbou vysílače je jednou z nejznámějších siluet české architektury."
+  },
+  kralovehradecky: {
+    name: "Královéhradecký kraj", capital: "Hradec Králové",
+    area: "4 759 km²", population: "≈ 550 tisíc", districts: "5 okresů",
+    highest: "Sněžka, 1 603 m — nejvyšší hora ČR (Krkonoše)", rivers: "Labe, Orlice",
+    neighbors: "Sousedí s Polskem", cities: "Hradec Králové, Trutnov, Náchod, Jičín",
+    economy: "Strojírenství, textilní a farmaceutický průmysl, horská turistika.",
+    attractions: "Krkonošský národní park se Sněžkou, zámek Kuks, ZOO Dvůr Králové.",
+    fact: "Na Sněžce, nejvyšší hoře Česka, stojí kaple a část vrcholu leží na polském území."
+  },
+  pardubicky: {
+    name: "Pardubický kraj", capital: "Pardubice",
+    area: "4 519 km²", population: "≈ 520 tisíc", districts: "4 okresy",
+    highest: "Buková hora, 958 m (Orlické hory)", rivers: "Labe, Chrudimka",
+    neighbors: "Sousedí s Polskem", cities: "Pardubice, Chrudim, Svitavy, Ústí nad Orlicí",
+    economy: "Chemický průmysl (Synthesia), strojírenství, automobilové součástky.",
+    attractions: "Zámek Kunětická hora, historické centrum Litomyšle (UNESCO), Orlické hory.",
+    fact: "Pardubice jsou proslulé perníkem a slavným dostihovým závodem Velká pardubická steeplechase."
+  },
+  vysocina: {
+    name: "Kraj Vysočina", capital: "Jihlava",
+    area: "6 796 km²", population: "≈ 505 tisíc", districts: "5 okresů",
+    highest: "Javořice, 837 m", rivers: "Sázava, Svratka, Jihlava",
+    neighbors: "Leží ve středu ČR mezi Čechami a Moravou", cities: "Jihlava, Třebíč, Žďár nad Sázavou, Havlíčkův Brod",
+    economy: "Automobilový průmysl (dodavatelé pro Škodu Auto a Bosch), zemědělství, lesnictví.",
+    attractions: "Historické centrum Telče (UNESCO), poutní kostel sv. Jana Nepomuckého na Zelené hoře (UNESCO).",
+    fact: "Vysočina je jediný kraj, který nemá krajské město ve svém názvu — jmenuje se podle krajiny, ne podle sídla."
+  },
+  jihomoravsky: {
+    name: "Jihomoravský kraj", capital: "Brno",
+    area: "7 195 km²", population: "≈ 1,19 mil. (2. nejlidnatější kraj)", districts: "7 okresů",
+    highest: "Čupel, 575 m (Drahanská vrchovina)", rivers: "Morava, Dyje, Svratka",
+    neighbors: "Sousedí s Rakouskem a Slovenskem", cities: "Brno, Znojmo, Hodonín, Břeclav",
+    economy: "IT a výzkum (univerzity a technologické firmy v Brně), vinařství, strojírenství.",
+    attractions: "Hrad Špilberk v Brně, Lednicko-valtický areál (UNESCO), jeskyně Moravského krasu.",
+    fact: "Jižní Morava se pěstováním vína pyšní víc než kterýkoli jiný kraj — roste tu přes 90 % českých vinic."
+  },
+  olomoucky: {
+    name: "Olomoucký kraj", capital: "Olomouc",
+    area: "5 271 km²", population: "≈ 630 tisíc", districts: "5 okresů",
+    highest: "Praděd, 1 491 m — 2. nejvyšší hora ČR (Jeseníky)", rivers: "Morava, Bečva",
+    neighbors: "Sousedí s Polskem", cities: "Olomouc, Prostějov, Přerov, Šumperk",
+    economy: "Strojírenství, potravinářský průmysl, chov a zpracování zemědělských plodin.",
+    attractions: "Sloup Nejsvětější Trojice v Olomouci (UNESCO), pohoří Jeseníky, zámek v Kroměříži (v sousedním kraji, ale blízko).",
+    fact: "Olomouc má druhé největší historické centrum v Česku hned po Praze."
+  },
+  zlinsky: {
+    name: "Zlínský kraj", capital: "Zlín",
+    area: "3 964 km²", population: "≈ 570 tisíc", districts: "4 okresy",
+    highest: "Čertův mlýn, 1 206 m (Beskydy)", rivers: "Morava, Vsetínská Bečva",
+    neighbors: "Sousedí se Slovenskem", cities: "Zlín, Uherské Hradiště, Kroměříž, Vsetín",
+    economy: "Historicky obuvnický průmysl (firma Baťa), dnes gumárenství (Continental Barum), strojírenství.",
+    attractions: "Funkcionalistická architektura baťovského Zlína, valašské památky, Beskydy.",
+    fact: "Zlín přeměnil ve 20. století podnikatel Tomáš Baťa v moderní průmyslové město podle jednotného urbanistického plánu."
+  },
+  moravskoslezsky: {
+    name: "Moravskoslezský kraj", capital: "Ostrava",
+    area: "5 427 km²", population: "≈ 1,15 mil.", districts: "6 okresů",
+    highest: "Lysá hora, 1 323 m (Beskydy)", rivers: "Odra, Opava, Ostravice",
+    neighbors: "Sousedí s Polskem a Slovenskem", cities: "Ostrava, Havířov, Karviná, Opava, Frýdek-Místek",
+    economy: "Historicky těžký průmysl a těžba černého uhlí, dnes i moderní technologie a služby.",
+    attractions: "Areál Dolní Vítkovice v Ostravě, Beskydy, hrad Hukvaldy (rodiště Leoše Janáčka).",
+    fact: "Ostravsko bývalo srdcem těžkého průmyslu Rakouska-Uherska i Československa — dnes se bývalé doly a hutě mění v kulturní centra."
+  }
+};
+
+// Hex grid layout (pointy-top hexagons)
+const size = 62;
+const w = Math.sqrt(3) * size;
+const rowSpacing = 0.75*2*size;
+const rowA_y = 95, rowB_y = 95 + rowSpacing, rowC_y = 95 + 2*rowSpacing;
+const rowA_x0 = 95, rowB_x0 = 95 + w/2, rowC_x0 = 95 + w/2;
+
+function hexPoints(cx, cy, r){
+  const pts = [];
+  for(let i=0;i<6;i++){
+    const angle = Math.PI/180 * (60*i - 30);
+    pts.push([cx + r*Math.cos(angle), cy + r*Math.sin(angle)]);
+  }
+  return pts.map(p=>p.join(",")).join(" ");
+}
+
+const layout = [
+  // row A (north)
+  {id:"karlovarsky", cx: rowA_x0 + 0*w, cy: rowA_y, label:"Karlovarský"},
+  {id:"ustecky", cx: rowA_x0 + 1*w, cy: rowA_y, label:"Ústecký"},
+  {id:"liberecky", cx: rowA_x0 + 2*w, cy: rowA_y, label:"Liberecký"},
+  {id:"kralovehradecky", cx: rowA_x0 + 3*w, cy: rowA_y, label:"Královéhradecký"},
+  {id:"moravskoslezsky", cx: rowA_x0 + 4*w, cy: rowA_y, label:"Moravsko-\nslezský"},
+  // row B (middle)
+  {id:"plzensky", cx: rowB_x0 + 0*w, cy: rowB_y, label:"Plzeňský"},
+  {id:"stredocesky", cx: rowB_x0 + 1*w, cy: rowB_y, label:"Středočeský"},
+  {id:"pardubicky", cx: rowB_x0 + 2*w, cy: rowB_y, label:"Pardubický"},
+  {id:"olomoucky", cx: rowB_x0 + 3*w, cy: rowB_y, label:"Olomoucký"},
+  // row C (south)
+  {id:"jihocesky", cx: rowC_x0 + 0*w, cy: rowC_y, label:"Jihočeský"},
+  {id:"vysocina", cx: rowC_x0 + 1*w, cy: rowC_y, label:"Vysočina"},
+  {id:"jihomoravsky", cx: rowC_x0 + 2*w, cy: rowC_y, label:"Jihomoravský"},
+  {id:"zlinsky", cx: rowC_x0 + 3*w, cy: rowC_y, label:"Zlínský"},
+];
+
+const svg = document.getElementById("map");
+const NS = "http://www.w3.org/2000/svg";
+
+layout.forEach(item=>{
+  const poly = document.createElementNS(NS,"polygon");
+  poly.setAttribute("points", hexPoints(item.cx, item.cy, size-4));
+  poly.setAttribute("class","hex");
+  poly.setAttribute("data-id", item.id);
+  poly.addEventListener("click", ()=>selectRegion(item.id, poly));
+  svg.appendChild(poly);
+
+  const label = document.createElementNS(NS,"text");
+  label.setAttribute("x", item.cx);
+  label.setAttribute("y", item.cy+4);
+  label.setAttribute("class","hexlabel");
+  label.style.pointerEvents = "none";
+  const lines = item.label.split("\n");
+  lines.forEach((ln,i)=>{
+    const tspan = document.createElementNS(NS,"tspan");
+    tspan.setAttribute("x", item.cx);
+    tspan.setAttribute("dy", i===0 ? (lines.length>1 ? -5 : 0) : 11);
+    tspan.textContent = ln;
+    label.appendChild(tspan);
+  });
+  svg.appendChild(label);
+});
+
+// Praha — small hex near Středočeský center
+const strc = layout.find(l=>l.id==="stredocesky");
+const prahaCx = strc.cx + 6, prahaCy = strc.cy - 34;
+const prahaPoly = document.createElementNS(NS,"polygon");
+prahaPoly.setAttribute("points", hexPoints(prahaCx, prahaCy, 20));
+prahaPoly.setAttribute("class","hex-praha");
+prahaPoly.setAttribute("data-id","praha");
+prahaPoly.addEventListener("click", ()=>selectRegion("praha", prahaPoly));
+svg.appendChild(prahaPoly);
+
+const prahaLabel = document.createElementNS(NS,"text");
+prahaLabel.setAttribute("x", prahaCx);
+prahaLabel.setAttribute("y", prahaCy+3);
+prahaLabel.setAttribute("class","hexlabel small");
+prahaLabel.textContent = "Praha";
+svg.appendChild(prahaLabel);
+
+let activeEl = null;
+function selectRegion(id, el){
+  if(activeEl) activeEl.classList.remove("active");
+  el.classList.add("active");
+  activeEl = el;
+
+  const r = regions[id];
+  document.getElementById("panelEmpty").style.display = "none";
+  const content = document.getElementById("panelContent");
+  content.style.display = "block";
+  content.innerHTML = `
+    <p class="region-eyebrow">Kraj</p>
+    <h2 class="region-title">${r.name}</h2>
+    <p class="region-capital">Krajské město: <strong>${r.capital}</strong></p>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="k">Rozloha</div><div class="v">${r.area}</div></div>
+      <div class="stat"><div class="k">Obyvatelé</div><div class="v">${r.population}</div></div>
+      <div class="stat"><div class="k">Okresy</div><div class="v">${r.districts}</div></div>
+      <div class="stat"><div class="k">Nejvyšší bod</div><div class="v">${r.highest}</div></div>
+    </div>
+
+    <div class="section">
+      <h3>Řeky</h3>
+      <p>${r.rivers}</p>
+    </div>
+    <div class="section">
+      <h3>Sousedství</h3>
+      <p>${r.neighbors}</p>
+    </div>
+    <div class="section">
+      <h3>Významná města</h3>
+      <p>${r.cities}</p>
+    </div>
+    <div class="section">
+      <h3>Ekonomika</h3>
+      <p>${r.economy}</p>
+    </div>
+    <div class="section">
+      <h3>Zajímavosti</h3>
+      <p>${r.attractions}</p>
+    </div>
+    <div class="funfact">${r.fact}</div>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeměpisné piškvorky | Zeměpisná dílna</title>
+<style>
+:root{--ink:#1d2b3a;--mut:#64748b;--line:#d6dfeb;--x:#e5484d;--o:#2f80ed}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Verdana,Arial,sans-serif;background:#f3f0fa;color:var(--ink);padding-bottom:26px}
+header{background:linear-gradient(135deg,#6a3fc4,#a259ff);color:#fff;text-align:center;padding:16px 12px 14px}
+header h1{font-size:1.45rem;font-weight:800}header p{opacity:.88;font-size:.92rem;margin-top:3px}
+.wrap{max-width:640px;margin:0 auto;padding:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(60,30,120,.07)}
+.lbl{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;margin:12px 0 8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 15px;border-radius:99px;border:2px solid var(--line);background:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:.98rem}
+.chip.on{background:#6a3fc4;border-color:#6a3fc4;color:#fff}
+.tn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tn label{display:flex;align-items:center;gap:8px;border:2.5px solid;border-radius:12px;padding:8px 10px;background:#fff}
+.tn input{border:0;outline:0;font-size:1.05rem;width:100%;font-weight:700;font-family:inherit}
+.big{display:block;width:100%;margin-top:16px;padding:14px;border:0;border-radius:13px;background:linear-gradient(135deg,#ff9f1c,#ff6b35);color:#fff;font-size:1.15rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 0 #c24e1c}
+.big:active{transform:translateY(2px)}
+.hide{display:none!important}
+.bar{display:flex;gap:10px;margin-bottom:10px}
+.tm{flex:1;background:#fff;border:3px solid var(--c);border-radius:14px;padding:8px 10px;text-align:center;opacity:.6}
+.tm.act{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 25%,transparent)}
+.tm b{display:block;font-size:1.05rem}.tm span{font-size:.85rem;color:var(--mut)}
+.tm .s{font-size:1.9rem;font-weight:900;color:var(--c);line-height:1}
+.grid{display:grid;gap:7px;background:#fff;padding:8px;border-radius:16px;border:1px solid var(--line)}
+.c{aspect-ratio:1/1;border-radius:13px;border:2px solid var(--line);background:#faf8ff;font-size:clamp(1.4rem,8vw,2.6rem);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;font-family:inherit;transition:transform .1s}
+.c:hover:not(.t){transform:scale(1.04);border-color:#a259ff}
+.c.t{cursor:default}
+.c.X{background:#fde4e4;border-color:var(--x);color:var(--x)}
+.c.O{background:#e1edfd;border-color:var(--o);color:var(--o)}
+.c.w{animation:pl .5s infinite alternate;box-shadow:0 0 0 4px #ffd60a}
+@keyframes pl{to{transform:scale(1.09)}}
+.msg{text-align:center;font-weight:700;margin:11px 0;min-height:26px;font-size:1.05rem}
+.ov{position:fixed;inset:0;background:rgba(20,10,50,.6);display:flex;align-items:center;justify-content:center;padding:14px;z-index:20}
+.modal{background:#fff;border-radius:20px;max-width:520px;width:100%;padding:18px;max-height:92vh;overflow:auto}
+.mcat{display:inline-block;padding:4px 12px;border-radius:99px;color:#fff;font-weight:800;font-size:.85rem}
+.mq{font-size:1.3rem;font-weight:800;margin:12px 0 14px;line-height:1.25}
+.ma{display:block;width:100%;text-align:left;margin-bottom:9px;padding:14px;border-radius:13px;border:2px solid var(--line);background:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit}
+.ma.ok{background:#d7f5df;border-color:#27ae60}.ma.bad{background:#fde1e1;border-color:#e74c3c}
+.res{font-weight:800;margin-top:6px;text-align:center;font-size:1.1rem}
+.row{display:flex;gap:10px}.row .big{margin-top:12px}
+.ghost{background:#efe9fb!important;color:#4a2b96!important;box-shadow:none!important}
+</style>
+</head>
+<body>
+<header><h1>❌⭕ Zeměpisné piškvorky</h1><p>Dva týmy · správná odpověď = získáš políčko a 1 bod · spoj řadu a získej +3 body</p></header>
+<div class="wrap">
+<div class="card" id="setup">
+  <div class="lbl" style="margin-top:0">Týmy</div>
+  <div class="tn"><label style="border-color:var(--x)"><span style="font-size:1.6rem;color:var(--x)">✖</span><input id="n1" value="Červení" maxlength="16"></label><label style="border-color:var(--o)"><span style="font-size:1.6rem;color:var(--o)">⭕</span><input id="n2" value="Modří" maxlength="16"></label></div>
+  <div class="lbl">Velikost hrací plochy</div><div class="chips" id="sz"></div>
+  <div class="lbl">Téma otázek</div><div class="chips" id="tp"></div>
+  <button class="big" id="go">▶ Začít hru</button>
+</div>
+<div id="game" class="hide">
+  <div class="bar"><div class="tm" id="t1" style="--c:var(--x)"></div><div class="tm" id="t2" style="--c:var(--o)"></div></div>
+  <div class="grid" id="grid"></div>
+  <div class="msg" id="msg"></div>
+  <div class="row"><button class="big ghost" id="rem">🔁 Nová hra</button><button class="big ghost" id="cfg">⚙ Nastavení</button></div>
+</div>
+</div>
+<div class="ov hide" id="ov"><div class="modal" id="modal"></div></div>
+<script>
+const QDATA = {
+evropa: [
+['Hlavní město Španělska je…','Madrid','Barcelona','Lisabon'],
+['Která řeka protéká Paříží?','Seina','Loira','Rýn'],
+['Nejvyšší hora Alp je…','Mont Blanc','Matterhorn','Triglav'],
+['Která země má tvar boty?','Itálie','Řecko','Portugalsko'],
+['Hlavní město Polska je…','Varšava','Krakov','Gdaňsk'],
+['Nejmenší stát světa je…','Vatikán','Monako','San Marino'],
+['Dunaj ústí do moře…','Černého','Baltského','Středozemního'],
+['Hlavní město Norska je…','Oslo','Stockholm','Helsinky'],
+['Kterým z těchto států Dunaj neprotéká?','Polsko','Rakousko','Maďarsko'],
+['Zemí tisíců jezer se nazývá…','Finsko','Švédsko','Norsko'],
+['Hlavní město Řecka je…','Atény','Soluň','Sparta'],
+['Hlavní město Irska je…','Dublin','Belfast','Cork'],
+['Hranici mezi Evropou a Asií tvoří pohoří…','Ural','Alpy','Karpaty'],
+['Fjordy jsou typické pro…','Norsko','Dánsko','Nizozemsko'],
+['Hlavní město Rakouska je…','Vídeň','Salcburk','Štýrský Hradec'],
+['Lamanšský průliv odděluje Velkou Británii od…','Francie','Španělska','Irska'],
+['Která řeka protéká Londýnem?','Temže','Seina','Labe'],
+['Hlavní město Portugalska je…','Lisabon','Porto','Madrid'],
+['Pohoří Pyreneje leží mezi Francií a…','Španělskem','Itálií','Německem'],
+['Hlavní město Maďarska je…','Budapešť','Bukurešť','Bělehrad'],
+['Který stát leží celý na ostrově?','Island','Dánsko','Belgie'],
+['Hlavní město Švýcarska je…','Bern','Curych','Ženeva']
+],
+asie: [
+['Hlavní město Japonska je…','Tokio','Kjóto','Ósaka'],
+['Nejvyšší hora světa je…','Mount Everest','K2','Kančendženga'],
+['Která země má nejvíce obyvatel (2024)?','Indie','Čína','Indonésie'],
+['Hlavní město Číny je…','Peking','Šanghaj','Hongkong'],
+['Z jihu omývá Indii oceán…','Indický','Tichý','Atlantský'],
+['Poušť Gobi leží v Mongolsku a…','Číně','Íránu','Indii'],
+['Hlavní město Jižní Koreje je…','Soul','Pusan','Pchjongjang'],
+['Himálaj leží mj. ve státě…','Nepál','Thajsko','Irák'],
+['Nejhlubší jezero světa je…','Bajkal','Aral','Mrtvé moře'],
+['Hlavní město Thajska je…','Bangkok','Hanoj','Manila'],
+['Který stát tvoří přes 17 000 ostrovů?','Indonésie','Japonsko','Mongolsko'],
+['Hlavní město Indie je…','Nové Dillí','Bombaj','Kalkata'],
+['Řeka Jang-c’-ťiang teče v…','Číně','Indii','Japonsku'],
+['Hlavní město Saúdské Arábie je…','Rijád','Dubaj','Mekka'],
+['Největší část Ruska leží v…','Asii','Evropě','Africe'],
+['Hlavní město Vietnamu je…','Hanoj','Bangkok','Phnompenh'],
+['Který stát leží na ostrově Honšú?','Japonsko','Filipíny','Malajsie'],
+['Tádž Mahal najdeš v…','Indii','Íránu','Turecku'],
+['Hlavní město Turecka je…','Ankara','Istanbul','Izmir'],
+['Mrtvé moře leží mezi Izraelem a…','Jordánskem','Egyptem','Irákem']
+],
+afrika: [
+['Nejdelší řeka světa je…','Nil','Amazonka','Kongo'],
+['Hlavní město Egypta je…','Káhira','Alexandrie','Luxor'],
+['Největší teplá poušť světa je…','Sahara','Kalahari','Gobi'],
+['Nejvyšší hora Afriky je…','Kilimandžáro','Mount Kenya','Atlas'],
+['Hlavní město Keni je…','Nairobi','Mombasa','Kampala'],
+['Madagaskar leží v oceánu…','Indickém','Atlantském','Tichém'],
+['Nejlidnatější stát Afriky je…','Nigérie','Egypt','Etiopie'],
+['Hlavní město Maroka je…','Rabat','Casablanca','Alžír'],
+['Viktoriiny vodopády leží na řece…','Zambezi','Nil','Niger'],
+['Mys Dobré naděje leží v…','Jihoafrické republice','Namibii','Mosambiku'],
+['Suezský průplav spojuje Středozemní moře a…','Rudé moře','Černé moře','Indický oceán'],
+['Hlavní město Etiopie je…','Addis Abeba','Nairobi','Chartúm'],
+['Největší jezero Afriky je…','Viktoriino','Tanganika','Čad'],
+['Který stát leží v Africe?','Ghana','Kolumbie','Laos'],
+['Hlavní město Alžírska je…','Alžír','Tunis','Rabat'],
+['Pohoří na severozápadě Afriky se jmenuje…','Atlas','Andy','Ural'],
+['Hlavní město Nigérie je…','Abuja','Lagos','Accra'],
+['Kterým státem protéká řeka Kongo?','Demokratickou republikou Kongo','Egyptem','Marokem'],
+['Savany a národní park Serengeti leží v…','Tanzanii','Maroku','Libyi'],
+['Hlavní město Tuniska je…','Tunis','Tripolis','Káhira']
+],
+amerika: [
+['Hlavní město USA je…','Washington, D.C.','New York','Los Angeles'],
+['Největší stát Jižní Ameriky je…','Brazílie','Argentina','Peru'],
+['Nejdelší pohoří světa na souši je…','Andy','Alpy','Skalisté hory'],
+['Hlavní město Kanady je…','Ottawa','Toronto','Vancouver'],
+['Amazonka protéká hlavně…','Brazílií','Argentinou','Mexikem'],
+['Panamský průplav spojuje Atlantský a…','Tichý oceán','Indický oceán','Severní ledový oceán'],
+['Hlavní město Argentiny je…','Buenos Aires','Montevideo','Santiago'],
+['Hlavní město Mexika je…','Mexiko (město)','Acapulco','Cancún'],
+['Machu Picchu leží v…','Peru','Mexiku','Chile'],
+['Niagarské vodopády leží na hranici USA a…','Kanady','Mexika','Kuby'],
+['Nejvyšší hora Severní Ameriky je…','Denali','Mount Whitney','Aconcagua'],
+['Kuba je ostrov v moři…','Karibském','Středozemním','Baltském'],
+['Hlavní město Chile je…','Santiago','Lima','Bogotá'],
+['Největší ostrov světa je…','Grónsko','Madagaskar','Borneo'],
+['Řeka Mississippi ústí do…','Mexického zálivu','Tichého oceánu','Hudsonova zálivu'],
+['Hlavní město Kolumbie je…','Bogotá','Caracas','Quito'],
+['Nejvyšší hora Jižní Ameriky je…','Aconcagua','Denali','Chimborazo'],
+['Hlavní město Peru je…','Lima','La Paz','Quito'],
+['Který stát leží v Jižní Americe?','Paraguay','Kuba','Panama'],
+['Velké kaňony a Grand Canyon najdeš v…','USA','Kanadě','Brazílii']
+],
+cesko: [
+['Nejvyšší hora České republiky je…','Sněžka','Praděd','Lysá hora'],
+['Nejdelší řeka v Česku je…','Vltava','Labe','Morava'],
+['Kolik krajů má Česká republika (včetně Prahy)?','14','13','15'],
+['Hlavní město Zlínského kraje je…','Zlín','Olomouc','Uherské Hradiště'],
+['S kterým státem Česko nesousedí?','Maďarsko','Rakousko','Polsko'],
+['Nejvyšší hora Moravy je…','Praděd','Sněžka','Lysá hora'],
+['Labe ústí do…','Severního moře','Černého moře','Baltského moře'],
+['Největší vodní nádrž v ČR podle rozlohy je…','Lipno','Orlík','Slapy'],
+['Hranici s Polskem tvoří pohoří…','Krkonoše','Šumava','Brdy'],
+['Hlavní město Ústeckého kraje je…','Ústí nad Labem','Most','Teplice'],
+['Nejnižší místo Česka je u…','Hřenska (Labe)','Brna','Ostravy'],
+['Kolik obyvatel má Česko přibližně?','10,9 milionu','5 milionů','20 milionů'],
+['Praha leží na řece…','Vltavě','Labi','Berounce'],
+['Hlavní město Jihomoravského kraje je…','Brno','Znojmo','Břeclav'],
+['Šumava leží na hranici s Německem a…','Rakouskem','Polskem','Slovenskem'],
+['Hlavní město Moravskoslezského kraje je…','Ostrava','Opava','Frýdek-Místek'],
+['Krajské město kraje Vysočina je…','Jihlava','Havlíčkův Brod','Třebíč'],
+['Karlovy Vary jsou známé…','lázněmi','těžbou uhlí','výrobou aut'],
+['Kolik států sousedí s Českem?','4','3','5'],
+['Pardubice jsou proslulé…','perníkem','pivem Plzeň','čokoládou']
+],
+svet: [
+['Největší oceán světa je…','Tichý','Atlantský','Indický'],
+['Nejmenší světadíl (podle rozlohy) je…','Austrálie','Evropa','Antarktida'],
+['Nultý poledník prochází…','Greenwichem','Paříží','Římem'],
+['Rovník dělí Zemi na…','severní a jižní polokouli','západní a východní polokouli','tři pásy'],
+['Nejchladnější světadíl je…','Antarktida','Asie','Evropa'],
+['Země oběhne Slunce přibližně za…','365 dní','30 dní','24 hodin'],
+['Největší stát světa podle rozlohy je…','Rusko','Kanada','Čína'],
+['Nejhlubší místo oceánů je…','Mariánský příkop','Karibská proláklina','Sundský příkop'],
+['Kolik světadílů obvykle uvádíme?','Šest nebo sedm','Čtyři','Deset'],
+['Kolik planet má Sluneční soustava?','8','9','7'],
+['Největší poušť světa je…','Antarktida','Sahara','Gobi'],
+['Zeměpisná šířka se měří od…','rovníku','nultého poledníku','pólu k pólu'],
+['Který oceán leží mezi Evropou a Amerikou?','Atlantský','Tichý','Indický'],
+['Nejvyšší pohoří světa je…','Himálaj','Alpy','Ural'],
+['Kontinent bez stálého obyvatelstva je…','Antarktida','Austrálie','Evropa'],
+['Čím je Země?','Planetou Sluneční soustavy','Hvězdou','Měsícem'],
+['Nejdelší řeka Evropy je…','Volha','Dunaj','Rýn'],
+['Světadíl s nejvíce obyvateli je…','Asie','Afrika','Evropa'],
+['Zeměpisná délka se měří od…','nultého poledníku','rovníku','obratníku Raka'],
+['Zeměpisný pól je…','krajní bod osy rotace Země','vrchol hory','střed oceánu']
+]
+};
+const CATS = {evropa:['Evropa','🗺','#2f80ed'],asie:['Asie','🏯','#a259ff'],afrika:['Afrika','🌍','#e2a336'],amerika:['Amerika','🌎','#17b3a3'],cesko:['Česko','🇨🇿','#e5484d'],svet:['Svět','🌐','#16497a']};
+
+const $=id=>document.getElementById(id);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const SZ=[[3,3,'3×3 (3 v řadě)'],[4,4,'4×4 (4 v řadě)'],[5,4,'5×5 (4 v řadě)']];
+const TP=[['mix','🎲 Mix všeho'],['evropa','🗺 Evropa'],['asie','🏯 Asie'],['afrika','🌍 Afrika'],['amerika','🌎 Amerika'],['cesko','🇨🇿 Česko'],['svet','🌐 Svět']];
+const S={sz:3,tp:'mix'};
+function chips(){const a=$('sz');a.innerHTML='';SZ.forEach(s=>{const b=document.createElement('button');b.className='chip'+(S.sz===s[0]?' on':'');b.textContent=s[2];b.onclick=()=>{S.sz=s[0];chips()};a.appendChild(b)});
+ const c=$('tp');c.innerHTML='';TP.forEach(s=>{const b=document.createElement('button');b.className='chip'+(S.tp===s[0]?' on':'');b.textContent=s[1];b.onclick=()=>{S.tp=s[0];chips()};c.appendChild(b)})}
+let B,cat,turn,over,names,wins=[0,0],pts=[0,0],deck={},K;
+function draw(c){if(!deck[c]||!deck[c].length)deck[c]=shuf(QDATA[c]);return deck[c].pop()}
+function newBoard(){const n=S.sz;K=SZ.find(s=>s[0]===n)[1];B=Array(n*n).fill(null);const cs=Object.keys(QDATA);cat=B.map(()=>S.tp==='mix'?cs[Math.floor(Math.random()*cs.length)]:S.tp);over=false;
+ const g=$('grid');g.style.gridTemplateColumns='repeat('+n+',1fr)';g.innerHTML='';B.forEach((_,i)=>{const b=document.createElement('button');b.className='c';b.id='k'+i;b.textContent=CATS[cat[i]][1];b.onclick=()=>pick(i);g.appendChild(b)});render();
+ $('msg').innerHTML='Na tahu: <b>'+names[turn]+'</b> – vyber políčko'}
+function render(){[0,1].forEach(i=>{const e=$('t'+(i+1));e.innerHTML='<span>'+(i?'⭕':'✖')+'</span><b>'+names[i]+'</b><div class="s">'+pts[i]+'</div><span>body · vyhraná kola: '+wins[i]+'</span>';e.classList.toggle('act',turn===i&&!over)})}
+function start(){names=[$('n1').value||'Červení',$('n2').value||'Modří'];wins=[0,0];pts=[0,0];turn=0;deck={};$('setup').classList.add('hide');$('game').classList.remove('hide');newBoard()}
+function pick(i){if(over||B[i]!==null)return;const c=cat[i];const q=draw(c);const [nm,em,col]=CATS[c];const ans=shuf([q[1],q[2],q[3]]);
+ $('modal').innerHTML='<span class="mcat" style="background:'+col+'">'+em+' '+nm+'</span> <span style="float:right;font-weight:800">'+(turn?'⭕':'✖')+' '+names[turn]+'</span><div class="mq">'+q[0]+'</div><div id="as"></div><div class="res" id="rs"></div>';
+ ans.forEach(a=>{const b=document.createElement('button');b.className='ma';b.textContent=a;b.onclick=()=>{$('as').querySelectorAll('button').forEach(x=>{x.disabled=true;if(x.textContent===q[1])x.classList.add('ok')});const good=a===q[1];if(!good)b.classList.add('bad');
+  $('rs').innerHTML=good?'<span style="color:#27ae60">✔ Správně! Políčko je tvoje (+1 bod).</span>':'<span style="color:#e74c3c">✘ Správně: '+q[1]+'. Hraje soupeř.</span>';
+  setTimeout(()=>{$('ov').classList.add('hide');resolve(i,good)},good?1000:1900)};$('as').appendChild(b)});
+ $('ov').classList.remove('hide')}
+function resolve(i,good){if(good){pts[turn]+=1;B[i]=turn;const e=$('k'+i);e.textContent=turn?'⭕':'✖';e.classList.add('t',turn?'O':'X');const w=check(i);if(w){over=true;w.forEach(k=>$('k'+k).classList.add('w'));wins[turn]++;pts[turn]+=3;render();$('msg').innerHTML='🏆 <b>'+names[turn]+'</b> vyhrává kolo! (+3 body bonus)';return end()}
+  if(B.every(x=>x!==null)){over=true;$('msg').textContent='🤝 Remíza – plocha je plná.';return end()}}
+ turn=1-turn;render();$('msg').innerHTML='Na tahu: <b>'+names[turn]+'</b>'}
+function end(){render()}
+function check(i){const n=S.sz,r=Math.floor(i/n),c=i%n,t=B[i];for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){const line=[i];for(const s of [1,-1]){let rr=r+dr*s,cc=c+dc*s;while(rr>=0&&rr<n&&cc>=0&&cc<n&&B[rr*n+cc]===t){line.push(rr*n+cc);rr+=dr*s;cc+=dc*s}}if(line.length>=K)return line}return null}
+$('go').onclick=start;$('rem').onclick=()=>{turn=wins[0]+wins[1]&1;newBoard()};$('cfg').onclick=()=>{$('game').classList.add('hide');$('setup').classList.remove('hide')};chips();
+</script>
+</body>
+</html>

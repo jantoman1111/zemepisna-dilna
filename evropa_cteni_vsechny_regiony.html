@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evropa – Čtení s porozuměním</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #f5f0e8; --surface: #fffef9; --text: #1c1c1c; --muted: #6b6558; --border: #ddd5c4; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1.5rem 5rem; }
+
+  /* REGION TABS */
+  .region-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .rtab { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.4rem; border-radius: 99px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--surface); color: var(--muted); }
+  .rtab:hover { transform: translateY(-1px); }
+  .rtab.active { color: #fff; }
+
+  /* region colors */
+  .c-north  { --rc: #1a5a8a; } .rtab.c-north.active  { background: #1a5a8a; border-color: #1a5a8a; }
+  .c-west   { --rc: #5b3a8a; } .rtab.c-west.active   { background: #5b3a8a; border-color: #5b3a8a; }
+  .c-center { --rc: #1a7a4a; } .rtab.c-center.active { background: #1a7a4a; border-color: #1a7a4a; }
+  .c-south  { --rc: #c0642a; } .rtab.c-south.active  { background: #c0642a; border-color: #c0642a; }
+  .c-east   { --rc: #7a1a2a; } .rtab.c-east.active   { background: #7a1a2a; border-color: #7a1a2a; }
+
+  .region-panel { display: none; max-width: 900px; margin: 0 auto; }
+  .region-panel.visible { display: block; }
+
+  header { text-align: center; margin-bottom: 1.5rem; }
+  .stripes { display: flex; justify-content: center; margin-bottom: 0.8rem; }
+  .stripe { height: 5px; width: 60px; }
+  .s1 { border-radius: 3px 0 0 3px; }
+  .s3 { border-radius: 0 3px 3px 0; }
+  h1 { font-family: 'Sora', sans-serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.9rem; color: var(--muted); }
+
+  /* CHAPTER NAV */
+  .text-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+  .text-label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 5px; padding: 2px 9px; margin-bottom: 1rem; }
+  .chapters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .chap-btn { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.9rem; cursor: pointer; color: var(--muted); transition: all 0.12s; }
+  .chap-btn:hover:not(.active) { background: #ede8df; }
+  .chapter-content { display: none; }
+  .chapter-content.visible { display: block; }
+  h2 { font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+  .text-body { font-family: 'Lora', Georgia, serif; font-size: 0.97rem; line-height: 1.85; color: #2a2720; }
+  .text-body p { margin-bottom: 0.9rem; }
+  .text-body p:last-child { margin-bottom: 0; }
+  .highlight { border-left: 3px solid; padding: 0.7rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-style: italic; background: #fef9ee; color: #5a4a20; font-size: 0.92rem; }
+
+  /* SCORE */
+  .score-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap; }
+  .score-big { font-family: 'Sora', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .score-info { font-size: 0.85rem; color: var(--muted); }
+  .progress-wrap { flex: 1; min-width: 100px; }
+  .progress-track { background: var(--border); border-radius: 99px; height: 7px; }
+  .progress-fill { height: 7px; border-radius: 99px; transition: width 0.5s; }
+  .btn-reset { font-size: 0.85rem; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 1rem; cursor: pointer; color: var(--muted); }
+  .btn-reset:hover { background: var(--bg); }
+
+  /* QUESTIONS */
+  .questions-title { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.9rem; }
+  .questions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1rem; }
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 1.1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+  .qcard.answered-correct { border-color: #1a7a4a; box-shadow: 0 0 0 3px rgba(26,122,74,0.08); }
+  .qcard.answered-wrong { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,0.08); }
+  .qcard-top { display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 0.8rem; }
+  .qnum { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; min-width: 26px; padding-top: 1px; }
+  .qmeta { flex: 1; }
+  .cat-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); border-radius: 4px; padding: 1px 7px; margin-bottom: 0.35rem; }
+  .qtext { font-size: 0.93rem; font-weight: 500; line-height: 1.45; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .opt { font-family: 'DM Sans', sans-serif; font-size: 0.84rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer; text-align: left; color: var(--text); transition: background 0.1s, transform 0.1s; line-height: 1.35; }
+  .opt:hover:not(:disabled) { background: #eee9de; border-color: #bbb3a2; transform: translateY(-1px); }
+  .opt:disabled { cursor: default; }
+  .opt.correct { background: #d4eddf; border-color: #1a7a4a; color: #145235; font-weight: 500; }
+  .opt.wrong { background: #fde8e6; border-color: #c0392b; color: #7a1e16; }
+  .explain { margin-top: 0.7rem; font-size: 0.81rem; line-height: 1.5; border-radius: 7px; padding: 0.55rem 0.8rem; display: none; }
+  .explain.show-c { display: block; background: #d4eddf; color: #145235; }
+  .explain.show-w { display: block; background: #fde8e6; color: #7a1e16; }
+
+  footer { text-align: center; margin-top: 3rem; font-size: 0.78rem; color: var(--border); }
+  @media (max-width: 480px) { .questions-grid { grid-template-columns: 1fr; } .opts { grid-template-columns: 1fr; } .text-card { padding: 1.1rem; } }
+
+  .print-btn { position: fixed; bottom: 20px; right: 20px; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1.3rem; border-radius: 10px; border: none; background: #2a2720; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.15); z-index: 20; }
+
+  @media print {
+    .region-tabs, .print-btn, .chapters, .btn-reset { display: none !important; }
+    .region-panel { display: block !important; page-break-after: always; }
+    .region-panel:last-child { page-break-after: auto; }
+    body { background: #fff; padding: .5rem .8rem; font-size: 13px; }
+    header { margin-bottom: .5rem; }
+    h1 { font-size: 1.3rem; }
+    .subtitle { font-size: .75rem; }
+
+    /* Ukázat všechny kapitoly pod sebou místo přepínání */
+    .chapter-content { display: block !important; page-break-inside: avoid; margin-bottom: .7rem; padding-bottom: .7rem; border-bottom: 1px solid #ddd; }
+    .chapter-content:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .text-card { padding: .8rem 1rem; margin-bottom: .6rem; }
+    .text-label { display: none; }
+    h2 { font-size: .95rem; margin-bottom: .4rem; }
+    .text-body { font-size: .78rem; line-height: 1.55; }
+    .text-body p { margin-bottom: .5rem; }
+    .highlight { font-size: .74rem; padding: .4rem .6rem; margin: .5rem 0; }
+
+    .score-bar { display: none; }
+
+    /* Kvíz vždy na nové stránce, samostatně - dostane celou stránku */
+    .questions-title { page-break-before: always; font-size: 1rem; margin-bottom: .6rem; padding-top: .3rem; }
+    .questions-grid { grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .qcard { padding: .8rem 1rem; break-inside: avoid; }
+    .qcard-top { margin-bottom: .45rem; gap: .5rem; }
+    .qnum { font-size: 1rem; min-width: 24px; }
+    .cat-tag { font-size: .65rem; padding: 2px 7px; margin-bottom: .3rem; }
+    .qtext { font-size: .85rem; line-height: 1.4; }
+    .opts { gap: 7px; }
+    .opt { padding: .45rem .7rem; font-size: .78rem; }
+    .explain { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; margin-bottom:1.5rem; padding-top:0.5rem;">
+  <div style="font-family:'Sora',sans-serif; font-size:clamp(1.4rem,4vw,2rem); font-weight:700; margin-bottom:0.2rem;">EVROPA – Čtení s porozuměním</div>
+  <div style="font-size:0.9rem; color:var(--muted);">Zeměpis · vyberte region</div>
+</div>
+
+<div class="region-tabs">
+  <button class="rtab c-north active" onclick="showRegion('north',this)">❄️ Severní Evropa</button>
+  <button class="rtab c-west"  onclick="showRegion('west',this)">🏰 Západní Evropa</button>
+  <button class="rtab c-center" onclick="showRegion('center',this)">⛰ Střední Evropa</button>
+  <button class="rtab c-south"  onclick="showRegion('south',this)">☀️ Jižní Evropa</button>
+  <button class="rtab c-east"  onclick="showRegion('east',this)">🐻 Východní Evropa</button>
+</div>
+
+<!-- ═══════════════ SEVERNÍ EVROPA ═══════════════ -->
+<div class="region-panel visible" id="panel-north">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#1a5a8a"></div><div class="stripe" style="background:#4a86ad"></div><div class="stripe s3" style="background:#a8cbe0"></div></div>
+    <h1>Severní Evropa</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#1a5a8a;border-color:#b8d0e0;background:#eaf1f7;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('north',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('north',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('north',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('north',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="north-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Severní Evropa zahrnuje <strong>Skandinávský poloostrov</strong> a přilehlé oblasti – patří sem <strong>Norsko</strong>, <strong>Švédsko</strong>, <strong>Finsko</strong>, <strong>Dánsko</strong> a ostrovní <strong>Island</strong>. K regionu se řadí i tři pobaltské státy: <strong>Litva</strong>, <strong>Lotyšsko</strong> a <strong>Estonsko</strong>.</p>
+        <p>Hlavní města: <strong>Oslo</strong> (Norsko), <strong>Stockholm</strong> (Švédsko), <strong>Helsinky</strong> (Finsko), <strong>Kodaň</strong> (Dánsko), <strong>Reykjavík</strong> (Island), <strong>Vilnius</strong> (Litva), <strong>Riga</strong> (Lotyšsko) a <strong>Tallinn</strong> (Estonsko).</p>
+        <div class="highlight" style="border-color:#1a5a8a;">Island je sopečný ostrov na rozhraní dvou tektonických desek. Najdete tu přes 100 sopek, horké prameny i gejzíry – slovo „gejzír“ pochází právě z islandského pramene Geysir.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Norské pobřeží protínají hluboké <strong>fjordy</strong> – zálivy vzniklé činností ledovců. Švédsko a Finsko jsou proslulé tisíci <strong>jezer</strong> a rozsáhlými <strong>tajgami</strong> (jehličnatými lesy). Na severu regionu, za polárním kruhem, leží <strong>tundra</strong>, kde v létě slunce nezapadá a v zimě naopak nevychází.</p>
+        <p>Podnebí je díky teplému mořskému proudu mírnější, než by odpovídalo zeměpisné šířce. Přesto zůstává výrazně chladnější a s dlouhými zimami ve srovnání s jižní a západní Evropou.</p>
+        <div class="highlight" style="border-color:#1a5a8a;">Golfský proud přináší teplou vodu od pobřeží Mexika až k norským fjordům, díky čemuž zůstávají severské přístavy v zimě nezamrzlé, i když leží severně od polárního kruhu.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region má nízkou hustotu zalidnění a je znám vysokou životní úrovní a rozvinutým <strong>sociálním státem</strong>. V raném středověku odsud vypluli <strong>Vikingové</strong>, kteří obchodovali, bojovali a osídlili i Island a Grónsko. Ve Finsku a Estonsku žijí národy hovořící <strong>ugrofinskými jazyky</strong>, odlišnými od skandinávské větve germánských jazyků.</p>
+        <p>Pobaltské státy byly po druhé světové válce součástí <strong>Sovětského svazu</strong> a samostatnosti dosáhly až v roce 1991.</p>
+        <div class="highlight" style="border-color:#1a5a8a;">Na dalekém severu Skandinávie žijí Sámové – původní obyvatelé oblasti zvané Laponsko, tradičně spjatí s chovem sobů.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Norsko</strong> těží ropu a zemní plyn ze Severního moře a výnosy ukládá do státního investičního fondu. <strong>Švédsko</strong> je známé strojírenským a automobilovým průmyslem, <strong>Finsko</strong> zase technologiemi a lesnickým průmyslem. Významnou roli hraje i rybolov a výroba elektřiny z obnovitelných zdrojů.</p>
+        <div class="highlight" style="border-color:#1a5a8a;">Norský státní fond, financovaný z prodeje ropy a plynu, je největším svěřeneckým fondem na světě a patří symbolicky každému obyvateli Norska.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="north-score" style="color:#1a5a8a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="north-prog" style="background:#1a5a8a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('north')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="north-qgrid"></div>
+</div>
+
+<!-- ═══════════════ ZÁPADNÍ EVROPA ═══════════════ -->
+<div class="region-panel" id="panel-west">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#5b3a8a"></div><div class="stripe" style="background:#8a6ab5"></div><div class="stripe s3" style="background:#c8b8e0"></div></div>
+    <h1>Západní Evropa</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#5b3a8a;border-color:#d0c0e0;background:#f2ecf7;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('west',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('west',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('west',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('west',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="west-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Západní Evropa leží při pobřeží Atlantiku a zahrnuje <strong>Francii</strong>, <strong>Německo</strong>, <strong>Velkou Británii</strong>, <strong>Irsko</strong> a státy Beneluxu – <strong>Nizozemsko</strong>, <strong>Belgii</strong> a <strong>Lucembursko</strong>.</p>
+        <p>Hlavní města: <strong>Paříž</strong> (Francie), <strong>Berlín</strong> (Německo), <strong>Londýn</strong> (Velká Británie), <strong>Dublin</strong> (Irsko), <strong>Amsterdam</strong> (Nizozemsko), <strong>Brusel</strong> (Belgie) a <strong>Lucemburk</strong> (Lucembursko).</p>
+        <div class="highlight" style="border-color:#5b3a8a;">Lucembursko patří rozlohou i počtem obyvatel k nejmenším státům Evropy, přitom má jeden z nejvyšších příjmů na obyvatele na světě.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="west-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Krajinu tvoří převážně nížiny – například <strong>Severoněmecká nížina</strong> – a rovinaté pobřeží Nizozemska, jehož značná část leží pod úrovní hladiny moře. Na jihovýchodě region zasahují výběžky <strong>Alp</strong>.</p>
+        <p>Panuje tu <strong>oceánské podnebí</strong> – vlhké, s mírnými zimami i léty a častými dešti přinášenými od Atlantiku.</p>
+        <div class="highlight" style="border-color:#5b3a8a;">Přibližně čtvrtina území Nizozemska leží pod úrovní moře. Zemi chrání rozsáhlý systém hrází, kanálů a čerpacích stanic zvaný poldery.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="west-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region patří k nejhustěji obydleným v Evropě. Ve Velké Británii vypukla na konci 18. století <strong>průmyslová revoluce</strong>, která proměnila výrobu i společnost po celém světě. Francie i Británie budovaly rozsáhlá <strong>koloniální impéria</strong>, jejichž vliv je patrný dodnes.</p>
+        <div class="highlight" style="border-color:#5b3a8a;">V Bruselu sídlí hlavní instituce Evropské unie – Evropská komise i Rada EU – proto se městu někdy přezdívá „hlavní město Evropy“.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="west-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Německo</strong> je největší ekonomikou Evropy, silnou stránkou je strojírenství a automobilový průmysl. <strong>Francie</strong> vyniká zemědělstvím i leteckým a kosmickým průmyslem. Nizozemský přístav <strong>Rotterdam</strong> patří k největším v Evropě a Londýn zůstává jedním z hlavních světových finančních center.</p>
+        <div class="highlight" style="border-color:#5b3a8a;">Rotterdam je největší přístav Evropy a jeden z nejrušnějších na světě – ročně jím projdou statisíce lodí a kontejnerů.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="west-score" style="color:#5b3a8a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="west-prog" style="background:#5b3a8a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('west')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="west-qgrid"></div>
+</div>
+
+<!-- ═══════════════ STŘEDNÍ EVROPA ═══════════════ -->
+<div class="region-panel" id="panel-center">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#1a7a4a"></div><div class="stripe" style="background:#4aa06e"></div><div class="stripe s3" style="background:#a8d8bc"></div></div>
+    <h1>Střední Evropa</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#1a7a4a;border-color:#b8d8c8;background:#eaf3ed;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('center',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('center',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('center',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('center',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="center-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Střední Evropa leží ve vnitrozemí kontinentu a zahrnuje <strong>Česko</strong>, <strong>Polsko</strong>, <strong>Slovensko</strong>, <strong>Maďarsko</strong>, <strong>Rakousko</strong> a <strong>Švýcarsko</strong>.</p>
+        <p>Hlavní města: <strong>Praha</strong> (Česko), <strong>Varšava</strong> (Polsko), <strong>Bratislava</strong> (Slovensko), <strong>Budapešť</strong> (Maďarsko), <strong>Vídeň</strong> (Rakousko) a <strong>Bern</strong> (Švýcarsko).</p>
+        <div class="highlight" style="border-color:#1a7a4a;">Švýcarsko není členem Evropské unie, přesto je součástí schengenského prostoru. Vyniká také tradicí přímé demokracie – o důležitých otázkách se často rozhoduje v celostátních referendech.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="center-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Jih regionu protínají <strong>Alpy</strong> (Švýcarsko, Rakousko) a <strong>Karpaty</strong> (Slovensko, jih Polska). Maďarsko leží z velké části v rovinaté <strong>Panonské nížině</strong>. Podnebí je mírné vnitrozemské, s teplejšími léty a chladnějšími zimami než na pobřeží.</p>
+        <div class="highlight" style="border-color:#1a7a4a;">Alpy jsou nejvyšším pohořím Evropy mimo Kavkaz. Nejvyšší vrchol, Mont Blanc (4 809 m), leží na hranici Francie a Itálie, ale pohoří zasahuje i do Švýcarska a Rakouska.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="center-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Velkou část regionu spojovala v minulosti monarchie <strong>Rakousko-Uhersko</strong>, která zanikla v roce 1918. Po druhé světové válce se Česko, Polsko, Slovensko i Maďarsko staly součástí <strong>socialistického bloku</strong> pod vlivem Sovětského svazu, který opustily po roce 1989.</p>
+        <div class="highlight" style="border-color:#1a7a4a;">Československo se 1. ledna 1993 pokojně rozdělilo na Česko a Slovensko – této události se přezdívá „sametový rozvod“.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="center-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Region je silně zaměřen na <strong>automobilový průmysl</strong> a strojírenství (např. Škoda Auto v Česku, Volkswagen v Německu i Slovensku). <strong>Švýcarsko</strong> je proslulé bankovnictvím a přesným hodinářstvím. Ve všech alpských zemích má velký význam <strong>cestovní ruch</strong>, zejména horská turistika a lyžování.</p>
+        <div class="highlight" style="border-color:#1a7a4a;">Švýcarské hodinky a bankovní sektor jsou známé po celém světě jako symbol přesnosti a stability.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="center-score" style="color:#1a7a4a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="center-prog" style="background:#1a7a4a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('center')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="center-qgrid"></div>
+</div>
+
+<!-- ═══════════════ JIŽNÍ EVROPA ═══════════════ -->
+<div class="region-panel" id="panel-south">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#c0642a"></div><div class="stripe" style="background:#d98c4a"></div><div class="stripe s3" style="background:#f0c090"></div></div>
+    <h1>Jižní Evropa</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#c0642a;border-color:#e8c8b0;background:#fbf0e8;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('south',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('south',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('south',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('south',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="south-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Jižní Evropa se rozkládá kolem <strong>Středozemního moře</strong> a zahrnuje <strong>Itálii</strong>, <strong>Španělsko</strong>, <strong>Portugalsko</strong>, <strong>Řecko</strong> a <strong>Chorvatsko</strong> spolu s dalšími balkánskými státy.</p>
+        <p>Hlavní města: <strong>Řím</strong> (Itálie), <strong>Madrid</strong> (Španělsko), <strong>Lisabon</strong> (Portugalsko), <strong>Atény</strong> (Řecko) a <strong>Záhřeb</strong> (Chorvatsko).</p>
+        <div class="highlight" style="border-color:#c0642a;">Řecko má více než 6 000 ostrovů a ostrůvků, ale trvale obydlených je jich jen kolem 200.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Region tvoří tři velké poloostrovy – <strong>Pyrenejský</strong>, <strong>Apeninský</strong> a <strong>Balkánský</strong>. Panuje tu <strong>středomořské podnebí</strong> s horkými suchými léty a mírnými, vlhčími zimami. Součástí krajiny jsou i aktivní sopky, například <strong>Etna</strong> a <strong>Vesuv</strong> v Itálii.</p>
+        <div class="highlight" style="border-color:#c0642a;">Etna na Sicílii je nejaktivnější sopkou Evropy – v posledních letech vybuchuje prakticky každý rok.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Jižní Evropa je kolébkou antických civilizací. Ve starověkém <strong>Řecku</strong> vznikla demokracie, filozofie a olympijské hry, <strong>Řím</strong> pak vybudoval rozsáhlé impérium, které ovlivnilo právo, jazyk i architekturu celé Evropy. Dodnes v regionu převažuje <strong>katolické</strong> nebo <strong>pravoslavné</strong> křesťanství.</p>
+        <div class="highlight" style="border-color:#c0642a;">Starověké Řecko je považováno za kolébku demokracie – slovo samo pochází z řeckých slov „demos“ (lid) a „kratos“ (vláda).</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Klíčovým odvětvím je <strong>cestovní ruch</strong> – pláže, historické památky i teplé počasí lákají miliony turistů ročně. Významné je i zemědělství – pěstují se <strong>olivy</strong>, <strong>víno</strong> a <strong>citrusy</strong>. Itálie je také světově proslulá módním a automobilovým průmyslem.</p>
+        <div class="highlight" style="border-color:#c0642a;">Milán patří spolu s Paříží, Londýnem a New Yorkem k hlavním centrům světové módy.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="south-score" style="color:#c0642a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="south-prog" style="background:#c0642a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('south')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="south-qgrid"></div>
+</div>
+
+<!-- ═══════════════ VÝCHODNÍ EVROPA ═══════════════ -->
+<div class="region-panel" id="panel-east">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#7a1a2a"></div><div class="stripe" style="background:#a84a5a"></div><div class="stripe s3" style="background:#d8a0aa"></div></div>
+    <h1>Východní Evropa</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#7a1a2a;border-color:#e0b8be;background:#f9eef0;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('east',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('east',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('east',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('east',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="east-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Východní Evropa zahrnuje <strong>Rusko</strong>, <strong>Ukrajinu</strong>, <strong>Bělorusko</strong> a <strong>Moldavsko</strong>. Rusko se svou rozlohou zasahuje z Evropy hluboko do Asie a je rozlohou <strong>největším státem světa</strong>.</p>
+        <p>Hlavní města: <strong>Moskva</strong> (Rusko), <strong>Kyjev</strong> (Ukrajina), <strong>Minsk</strong> (Bělorusko) a <strong>Kišiněv</strong> (Moldavsko).</p>
+        <div class="highlight" style="border-color:#7a1a2a;">Rusko zabírá přibližně jednu osminu veškeré souše na Zemi a rozkládá se na území celkem 11 časových pásem.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Region leží převážně na rovinaté <strong>Východoevropské rovině</strong>. Pohoří <strong>Ural</strong> tradičně slouží jako hranice mezi Evropou a Asií. Hlavními řekami jsou <strong>Volha</strong> a <strong>Dněpr</strong>. Podnebí je výrazně <strong>kontinentální</strong> – s velkými rozdíly mezi horkým létem a mrazivou zimou.</p>
+        <div class="highlight" style="border-color:#7a1a2a;">Volha je s délkou přes 3 500 km nejdelší řekou Evropy. Protéká středem evropského Ruska a vlévá se do Kaspického moře.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Většinu obyvatel regionu tvoří <strong>slovanské národy</strong>, převládajícím náboženstvím je <strong>pravoslavné křesťanství</strong>. V letech 1922 až 1991 byl region jádrem <strong>Sovětského svazu</strong>, který se rozpadl na patnáct samostatných států. Od roku 2022 probíhá na Ukrajině rozsáhlý ozbrojený konflikt po ruské invazi.</p>
+        <div class="highlight" style="border-color:#7a1a2a;">Sovětský svaz se rozpadl v roce 1991 a na jeho místě vzniklo patnáct nezávislých států, mimo jiné Rusko, Ukrajina, Bělorusko a pobaltské republiky.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="east-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Rusko</strong> patří mezi největší světové producenty <strong>ropy a zemního plynu</strong>. <strong>Ukrajina</strong> je díky úrodné černozemi tradičně označována za „obilnici Evropy“ a patří k významným světovým vývozcům obilí.</p>
+        <div class="highlight" style="border-color:#7a1a2a;">Ukrajinská černozem patří k nejúrodnějším půdám na světě, což zemi dlouhodobě řadí mezi klíčové producenty pšenice a kukuřice.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="east-score" style="color:#7a1a2a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="east-prog" style="background:#7a1a2a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('east')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="east-qgrid"></div>
+</div>
+
+<script>
+const DATA = {
+  north: {
+    questions: [
+      { q: "Které město je hlavním městem Norska?", opts: ["A) Stockholm","B) Oslo","C) Helsinky","D) Bergen"], ans: 1, cat: "Hlavní města" },
+      { q: "Jak se nazývají hluboké zálivy na norském pobřeží, vzniklé činností ledovců?", opts: ["A) Delty","B) Laguny","C) Fjordy","D) Estuáry"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jaké je hlavní město Islandu?", opts: ["A) Reykjavík","B) Akureyri","C) Bergen","D) Tromsø"], ans: 0, cat: "Hlavní města" },
+      { q: "Kdo jsou Sámové?", opts: ["A) Původní obyvatelé severu Skandinávie","B) Vikingská bojová družina","C) Etnikum z pobaltských států","D) Obyvatelé Islandu"], ans: 0, cat: "Obyvatelstvo" },
+      { q: "Z čeho pochází hlavní bohatství Norska?", opts: ["A) Zemědělství","B) Ropa a zemní plyn","C) Turistika","D) Textilní průmysl"], ans: 1, cat: "Hospodářství" },
+      { q: "Jaké je hlavní město Finska?", opts: ["A) Tampere","B) Turku","C) Helsinky","D) Oulu"], ans: 2, cat: "Hlavní města" },
+      { q: "Které tři státy tvoří tzv. pobaltské státy?", opts: ["A) Litva, Lotyšsko, Estonsko","B) Polsko, Litva, Bělorusko","C) Finsko, Estonsko, Rusko","D) Dánsko, Švédsko, Norsko"], ans: 0, cat: "Státy" },
+      { q: "Který mořský proud ovlivňuje mírnější podnebí severní Evropy?", opts: ["A) Labradorský proud","B) Golfský proud","C) Kanárský proud","D) Humboldtův proud"], ans: 1, cat: "Podnebí" },
+    ]
+  },
+  west: {
+    questions: [
+      { q: "Které město je hlavním městem Německa?", opts: ["A) Mnichov","B) Frankfurt","C) Berlín","D) Hamburk"], ans: 2, cat: "Hlavní města" },
+      { q: "Přibližně kolik procent území Nizozemska leží pod úrovní hladiny moře?", opts: ["A) asi 5 %","B) asi 25 %","C) asi 50 %","D) asi 75 %"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Ve kterém městě sídlí hlavní instituce Evropské unie?", opts: ["A) Paříž","B) Brusel","C) Londýn","D) Amsterdam"], ans: 1, cat: "Státy" },
+      { q: "Který přístav patří k největším v Evropě?", opts: ["A) Hamburk","B) Marseille","C) Rotterdam","D) Le Havre"], ans: 2, cat: "Hospodářství" },
+      { q: "Jaké je hlavní město Irska?", opts: ["A) Belfast","B) Dublin","C) Cork","D) Galway"], ans: 1, cat: "Hlavní města" },
+      { q: "Kde na konci 18. století začala průmyslová revoluce?", opts: ["A) Ve Francii","B) V Německu","C) Ve Velké Británii","D) V Nizozemsku"], ans: 2, cat: "Dějiny" },
+      { q: "Která země má největší ekonomiku v Evropě?", opts: ["A) Francie","B) Německo","C) Velká Británie","D) Nizozemsko"], ans: 1, cat: "Hospodářství" },
+      { q: "Jaké je hlavní město Lucemburska?", opts: ["A) Lucemburk","B) Brusel","C) Antverpy","D) Metz"], ans: 0, cat: "Hlavní města" },
+    ]
+  },
+  center: {
+    questions: [
+      { q: "Které město je hlavním městem Maďarska?", opts: ["A) Bratislava","B) Vídeň","C) Budapešť","D) Krakov"], ans: 2, cat: "Hlavní města" },
+      { q: "Kdy se rozdělilo Československo na Česko a Slovensko?", opts: ["A) 1989","B) 1991","C) 1993","D) 2004"], ans: 2, cat: "Dějiny" },
+      { q: "Které pohoří je nejvyšší v Evropě mimo Kavkaz?", opts: ["A) Karpaty","B) Alpy","C) Krkonoše","D) Šumava"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Jaké je hlavní město Švýcarska?", opts: ["A) Curych","B) Ženeva","C) Bern","D) Basilej"], ans: 2, cat: "Hlavní města" },
+      { q: "Kde leží rovinatá Panonská nížina?", opts: ["A) Ve Švýcarsku","B) V Rakousku","C) V Maďarsku","D) V Polsku"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Kdy zaniklo Rakousko-Uhersko?", opts: ["A) 1914","B) 1918","C) 1938","D) 1945"], ans: 1, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Polska?", opts: ["A) Krakov","B) Gdaňsk","C) Varšava","D) Vratislav"], ans: 2, cat: "Hlavní města" },
+      { q: "Čím je Švýcarsko celosvětově proslulé?", opts: ["A) Textilním průmyslem","B) Bankovnictvím a hodinářstvím","C) Loděnicemi","D) Těžbou ropy"], ans: 1, cat: "Hospodářství" },
+    ]
+  },
+  south: {
+    questions: [
+      { q: "Které město je hlavním městem Řecka?", opts: ["A) Soluň","B) Atény","C) Patra","D) Larisa"], ans: 1, cat: "Hlavní města" },
+      { q: "Kolik ostrovů má Řecko přibližně?", opts: ["A) asi 600","B) asi 2 000","C) asi 6 000","D) asi 12 000"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Která sopka je nejaktivnější v Evropě?", opts: ["A) Vesuv","B) Etna","C) Stromboli","D) Santorini"], ans: 1, cat: "Příroda" },
+      { q: "Jaké je hlavní město Portugalska?", opts: ["A) Porto","B) Lisabon","C) Coimbra","D) Faro"], ans: 1, cat: "Hlavní města" },
+      { q: "Jaké podnebí převládá v jižní Evropě?", opts: ["A) Oceánské","B) Kontinentální","C) Středomořské","D) Subarktické"], ans: 2, cat: "Podnebí" },
+      { q: "Kde ve starověku vznikla demokracie?", opts: ["A) V Římě","B) V Řecku","C) V Egyptě","D) Ve Španělsku"], ans: 1, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Chorvatska?", opts: ["A) Split","B) Dubrovník","C) Záhřeb","D) Rijeka"], ans: 2, cat: "Hlavní města" },
+      { q: "Které odvětví je pro ekonomiku jižní Evropy klíčové?", opts: ["A) Těžba nerostných surovin","B) Cestovní ruch","C) Rybolov v Severním moři","D) Těžký průmysl"], ans: 1, cat: "Hospodářství" },
+    ]
+  },
+  east: {
+    questions: [
+      { q: "Které město je hlavním městem Ukrajiny?", opts: ["A) Charkov","B) Kyjev","C) Oděsa","D) Lvov"], ans: 1, cat: "Hlavní města" },
+      { q: "Které pohoří tvoří tradiční hranici mezi Evropou a Asií?", opts: ["A) Kavkaz","B) Karpaty","C) Ural","D) Altaj"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Která řeka je nejdelší v Evropě?", opts: ["A) Dněpr","B) Don","C) Dunaj","D) Volha"], ans: 3, cat: "Fyzická geografie" },
+      { q: "Kdy se rozpadl Sovětský svaz?", opts: ["A) 1985","B) 1989","C) 1991","D) 1993"], ans: 2, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Běloruska?", opts: ["A) Minsk","B) Kišiněv","C) Smolensk","D) Brest"], ans: 0, cat: "Hlavní města" },
+      { q: "Proč se Ukrajině přezdívá „obilnice Evropy“?", opts: ["A) Má nejvíc obyvatel","B) Má úrodnou černozem a vyváží obilí","C) Leží na hlavní obchodní trase","D) Má nejvíc mlýnů v Evropě"], ans: 1, cat: "Hospodářství" },
+      { q: "Jaká je hlavní vývozní surovina Ruska?", opts: ["A) Uhlí","B) Ropa a zemní plyn","C) Zlato","D) Dřevo"], ans: 1, cat: "Hospodářství" },
+      { q: "Jaké je hlavní město Moldavska?", opts: ["A) Kišiněv","B) Tiraspol","C) Oděsa","D) Jasy"], ans: 0, cat: "Hlavní města" },
+    ]
+  }
+};
+
+const state = {};
+Object.keys(DATA).forEach(r => { state[r] = { answered: [], correct: [] }; resetRegion(r); });
+
+function resetRegion(r) {
+  const n = DATA[r].questions.length;
+  state[r] = { answered: new Array(n).fill(false), correct: new Array(n).fill(false) };
+  updateScore(r);
+  renderQuestions(r);
+}
+
+function updateScore(r) {
+  const s = state[r];
+  const c = s.correct.filter(Boolean).length;
+  const a = s.answered.filter(Boolean).length;
+  const n = DATA[r].questions.length;
+  document.getElementById(`${r}-score`).textContent = `${c}/${n}`;
+  document.getElementById(`${r}-prog`).style.width = Math.round((a / n) * 100) + '%';
+}
+
+function choose(r, qi, oi) {
+  if (state[r].answered[qi]) return;
+  state[r].answered[qi] = true;
+  const q = DATA[r].questions[qi];
+  const btns = document.querySelectorAll(`#${r}-opts-${qi} .opt`);
+  const expl = document.getElementById(`${r}-expl-${qi}`);
+  const card = document.getElementById(`${r}-card-${qi}`);
+  btns.forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.ans) b.classList.add('correct');
+    else if (idx === oi && oi !== q.ans) b.classList.add('wrong');
+  });
+  if (oi === q.ans) {
+    state[r].correct[qi] = true;
+    expl.textContent = '✓ Správně!';
+    expl.className = 'explain show-c';
+    card.classList.add('answered-correct');
+  } else {
+    expl.textContent = '✗ Špatně. Správná odpověď: ' + q.opts[q.ans].replace(/^[A-D]\) /, '');
+    expl.className = 'explain show-w';
+    card.classList.add('answered-wrong');
+  }
+  updateScore(r);
+}
+
+function renderQuestions(r) {
+  const qs = DATA[r].questions;
+  document.getElementById(`${r}-qgrid`).innerHTML = qs.map((q, qi) => `
+    <div class="qcard" id="${r}-card-${qi}">
+      <div class="qcard-top">
+        <div class="qnum">${qi + 1}</div>
+        <div class="qmeta">
+          <div class="cat-tag">${q.cat}</div>
+          <div class="qtext">${q.q}</div>
+        </div>
+      </div>
+      <div class="opts" id="${r}-opts-${qi}">
+        ${q.opts.map((o, oi) => `<button class="opt" onclick="choose('${r}',${qi},${oi})">${o}</button>`).join('')}
+      </div>
+      <div class="explain" id="${r}-expl-${qi}"></div>
+    </div>
+  `).join('');
+}
+
+function showRegion(r, btn) {
+  document.querySelectorAll('.region-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${r}`).classList.add('visible');
+  btn.classList.add('active');
+}
+
+function showChap(r, idx, btn) {
+  document.querySelectorAll(`#panel-${r} .chapter-content`).forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll(`#panel-${r} .chap-btn`).forEach(el => el.classList.remove('active'));
+  document.getElementById(`${r}-chap-${idx}`).classList.add('visible');
+  btn.classList.add('active');
+}
+</script>
+<button class="print-btn" onclick="window.print()">🖨 Vytisknout</button>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Denně nový materiál (0 kreditů):
+1) Na GitHubu v repozitáři: Add file -> Upload files -> přetáhni nový .html soubor -> Commit.
+2) Otevři materialy.json -> tužka (Edit) -> před poslední ] přidej řádek (s čárkou za předchozím):
+ {"id":"nazev","cat":"cesko","also":"vodstvo","label":"Lekce","icon":"📄","title":"Název","desc":"Krátký popis","tag":"1 list","file":"nazev.html"}
+ cat = europe/africa/asia/america/oceania/cesko/hry/generator/vodstvo ; also je volitelné (druhá kategorie)
+ label: Lekce / Atlas / Čtení / Test / Hra (podle toho se zařadí do filtru typu)
+3) Commit -> Netlify se za minutu sám aktualizuje.

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amerika – Čtení s porozuměním</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #f5f0e8; --surface: #fffef9; --text: #1c1c1c; --muted: #6b6558; --border: #ddd5c4; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1.5rem 5rem; }
+
+  .region-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .rtab { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.4rem; border-radius: 99px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; background: var(--surface); color: var(--muted); }
+  .rtab:hover { transform: translateY(-1px); }
+  .rtab.active { color: #fff; }
+
+  .c-north     { --rc: #1a4a8a; } .rtab.c-north.active     { background: #1a4a8a; border-color: #1a4a8a; }
+  .c-central   { --rc: #2a8a4a; } .rtab.c-central.active   { background: #2a8a4a; border-color: #2a8a4a; }
+  .c-caribbean { --rc: #0aa0a0; } .rtab.c-caribbean.active { background: #0aa0a0; border-color: #0aa0a0; }
+  .c-andes     { --rc: #8a5a2a; } .rtab.c-andes.active     { background: #8a5a2a; border-color: #8a5a2a; }
+  .c-south     { --rc: #c8962a; } .rtab.c-south.active     { background: #c8962a; border-color: #c8962a; }
+
+  .region-panel { display: none; max-width: 900px; margin: 0 auto; }
+  .region-panel.visible { display: block; }
+
+  header { text-align: center; margin-bottom: 1.5rem; }
+  .stripes { display: flex; justify-content: center; margin-bottom: 0.8rem; }
+  .stripe { height: 5px; width: 60px; }
+  .s1 { border-radius: 3px 0 0 3px; }
+  .s3 { border-radius: 0 3px 3px 0; }
+  h1 { font-family: 'Sora', sans-serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; margin-bottom: 0.2rem; }
+  .subtitle { font-size: 0.9rem; color: var(--muted); }
+
+  .text-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+  .text-label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 5px; padding: 2px 9px; margin-bottom: 1rem; }
+  .chapters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .chap-btn { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 0.35rem 0.9rem; cursor: pointer; color: var(--muted); transition: all 0.12s; }
+  .chap-btn:hover:not(.active) { background: #ede8df; }
+  .chapter-content { display: none; }
+  .chapter-content.visible { display: block; }
+  h2 { font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+  .text-body { font-family: 'Lora', Georgia, serif; font-size: 0.97rem; line-height: 1.85; color: #2a2720; }
+  .text-body p { margin-bottom: 0.9rem; }
+  .text-body p:last-child { margin-bottom: 0; }
+  .highlight { border-left: 3px solid; padding: 0.7rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-style: italic; background: #fef9ee; color: #5a4a20; font-size: 0.92rem; }
+
+  .score-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap; }
+  .score-big { font-family: 'Sora', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .score-info { font-size: 0.85rem; color: var(--muted); }
+  .progress-wrap { flex: 1; min-width: 100px; }
+  .progress-track { background: var(--border); border-radius: 99px; height: 7px; }
+  .progress-fill { height: 7px; border-radius: 99px; transition: width 0.5s; }
+  .btn-reset { font-size: 0.85rem; background: none; border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 1rem; cursor: pointer; color: var(--muted); }
+  .btn-reset:hover { background: var(--bg); }
+
+  .questions-title { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.9rem; }
+  .questions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1rem; }
+  .qcard { background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 1.1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+  .qcard.answered-correct { border-color: #1a7a4a; box-shadow: 0 0 0 3px rgba(26,122,74,0.08); }
+  .qcard.answered-wrong { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,0.08); }
+  .qcard-top { display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 0.8rem; }
+  .qnum { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700; min-width: 26px; padding-top: 1px; }
+  .qmeta { flex: 1; }
+  .cat-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); border-radius: 4px; padding: 1px 7px; margin-bottom: 0.35rem; }
+  .qtext { font-size: 0.93rem; font-weight: 500; line-height: 1.45; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .opt { font-family: 'DM Sans', sans-serif; font-size: 0.84rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer; text-align: left; color: var(--text); transition: background 0.1s, transform 0.1s; line-height: 1.35; }
+  .opt:hover:not(:disabled) { background: #eee9de; border-color: #bbb3a2; transform: translateY(-1px); }
+  .opt:disabled { cursor: default; }
+  .opt.correct { background: #d4eddf; border-color: #1a7a4a; color: #145235; font-weight: 500; }
+  .opt.wrong { background: #fde8e6; border-color: #c0392b; color: #7a1e16; }
+  .explain { margin-top: 0.7rem; font-size: 0.81rem; line-height: 1.5; border-radius: 7px; padding: 0.55rem 0.8rem; display: none; }
+  .explain.show-c { display: block; background: #d4eddf; color: #145235; }
+  .explain.show-w { display: block; background: #fde8e6; color: #7a1e16; }
+
+  footer { text-align: center; margin-top: 3rem; font-size: 0.78rem; color: var(--border); }
+  @media (max-width: 480px) { .questions-grid { grid-template-columns: 1fr; } .opts { grid-template-columns: 1fr; } .text-card { padding: 1.1rem; } }
+
+  .print-btn { position: fixed; bottom: 20px; right: 20px; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 600; padding: 0.6rem 1.3rem; border-radius: 10px; border: none; background: #2a2720; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.15); z-index: 20; }
+
+  @media print {
+    .region-tabs, .print-btn, .chapters, .btn-reset { display: none !important; }
+    .region-panel { display: block !important; page-break-after: always; }
+    .region-panel:last-child { page-break-after: auto; }
+    body { background: #fff; padding: .5rem .8rem; font-size: 13px; }
+    header { margin-bottom: .5rem; }
+    h1 { font-size: 1.3rem; }
+    .subtitle { font-size: .75rem; }
+
+    .chapter-content { display: block !important; page-break-inside: avoid; margin-bottom: .7rem; padding-bottom: .7rem; border-bottom: 1px solid #ddd; }
+    .chapter-content:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .text-card { padding: .8rem 1rem; margin-bottom: .6rem; }
+    .text-label { display: none; }
+    h2 { font-size: .95rem; margin-bottom: .4rem; }
+    .text-body { font-size: .78rem; line-height: 1.55; }
+    .text-body p { margin-bottom: .5rem; }
+    .highlight { font-size: .74rem; padding: .4rem .6rem; margin: .5rem 0; }
+
+    .score-bar { display: none; }
+
+    /* Kvíz vždy na nové stránce, samostatně - dostane celou stránku */
+    .questions-title { page-break-before: always; font-size: 1rem; margin-bottom: .6rem; padding-top: .3rem; }
+    .questions-grid { grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .qcard { padding: .8rem 1rem; break-inside: avoid; }
+    .qcard-top { margin-bottom: .45rem; gap: .5rem; }
+    .qnum { font-size: 1rem; min-width: 24px; }
+    .cat-tag { font-size: .65rem; padding: 2px 7px; margin-bottom: .3rem; }
+    .qtext { font-size: .85rem; line-height: 1.4; }
+    .opts { gap: 7px; }
+    .opt { padding: .45rem .7rem; font-size: .78rem; }
+    .explain { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div style="text-align:center; margin-bottom:1.5rem; padding-top:0.5rem;">
+  <div style="font-family:'Sora',sans-serif; font-size:clamp(1.4rem,4vw,2rem); font-weight:700; margin-bottom:0.2rem;">AMERIKA – Čtení s porozuměním</div>
+  <div style="font-size:0.9rem; color:var(--muted);">Zeměpis · vyberte region</div>
+</div>
+
+<div class="region-tabs">
+  <button class="rtab c-north active" onclick="showRegion('north',this)">🦅 Severní Amerika</button>
+  <button class="rtab c-central" onclick="showRegion('central',this)">🌋 Mexiko a Stř. Amerika</button>
+  <button class="rtab c-caribbean" onclick="showRegion('caribbean',this)">🏝️ Karibik</button>
+  <button class="rtab c-andes" onclick="showRegion('andes',this)">⛰️ Andské státy</button>
+  <button class="rtab c-south" onclick="showRegion('south',this)">🌎 Brazílie a jižní kužel</button>
+</div>
+
+<!-- ═══════════════ SEVERNÍ AMERIKA ═══════════════ -->
+<div class="region-panel visible" id="panel-north">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#1a4a8a"></div><div class="stripe" style="background:#4a76b0"></div><div class="stripe s3" style="background:#a0bcdd"></div></div>
+    <h1>Severní Amerika</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#1a4a8a;border-color:#b8c8e0;background:#eaf0f8;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('north',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('north',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('north',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('north',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="north-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Severní Amerika zahrnuje <strong>Spojené státy americké</strong> a <strong>Kanadu</strong>. Region tvoří třetí největší kontinent na světě podle rozlohy.</p>
+        <p>Hlavní města: <strong>Washington, D.C.</strong> (USA) a <strong>Ottawa</strong> (Kanada).</p>
+        <div class="highlight" style="border-color:#1a4a8a;">Kanada je rozlohou druhým největším státem světa, přestože má jen asi 40 milionů obyvatel.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Napříč kontinentem se táhnou pohoří <strong>Skalisté hory</strong> na západě a <strong>Apalačské pohoří</strong> na východě. Střed kontinentu tvoří rozsáhlé <strong>prérie</strong>. Na severu Kanady panuje polární a subarktické podnebí, jih USA je naopak subtropický až pouštní (Arizona, Nevada).</p>
+        <div class="highlight" style="border-color:#1a4a8a;">Velká jezera na hranici USA a Kanady tvoří největší souvislou plochu sladké vody na světě.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Před příchodem Evropanů žily na kontinentu stovky <strong>indiánských národů</strong>. Od 17. století sem směřovala kolonizace především z Velké Británie a Francie. USA vyhlásily nezávislost v roce <strong>1776</strong>.</p>
+        <div class="highlight" style="border-color:#1a4a8a;">Kanada je oficiálně dvojjazyčná země – úředními jazyky jsou angličtina a francouzština.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="north-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>USA mají největší ekonomiku světa, tažena <strong>technologiemi</strong>, finančnictvím a průmyslem. Kanada je významným vývozcem dřeva, ropy z břidlicových písků a nerostných surovin.</p>
+        <div class="highlight" style="border-color:#1a4a8a;">Silicon Valley v Kalifornii je světovým centrem technologických firem jako Apple, Google nebo Meta.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="north-score" style="color:#1a4a8a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="north-prog" style="background:#1a4a8a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('north')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="north-qgrid"></div>
+</div>
+
+<!-- ═══════════════ MEXIKO A STŘEDNÍ AMERIKA ═══════════════ -->
+<div class="region-panel" id="panel-central">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#2a8a4a"></div><div class="stripe" style="background:#5aae76"></div><div class="stripe s3" style="background:#a8d8b8"></div></div>
+    <h1>Mexiko a Střední Amerika</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#2a8a4a;border-color:#b8ddc0;background:#eaf6ee;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('central',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('central',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('central',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('central',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="central-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Mezi Severní a Jižní Amerikou leží úzký pás pevniny zvaný <strong>Střední Amerika</strong>. Zahrnuje <strong>Mexiko</strong> a menší státy jako <strong>Guatemala</strong>, <strong>Honduras</strong>, <strong>Nikaragua</strong>, <strong>Kostarika</strong> a <strong>Panama</strong>.</p>
+        <p>Hlavní města: <strong>Ciudad de México</strong> (Mexiko), <strong>Ciudad de Guatemala</strong>, <strong>Managua</strong> (Nikaragua), <strong>San José</strong> (Kostarika) a <strong>Panama City</strong>.</p>
+        <div class="highlight" style="border-color:#2a8a4a;">Panamský průplav spojuje Atlantský a Tichý oceán a patří k nejvýznamnějším vodním cestám světa.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Region leží v pásu vysoké <strong>sopečné a seismické aktivity</strong>, časté jsou zemětřesení i hurikány přicházející od Karibského moře. Ve vnitrozemí se táhnou vysoká pohoří, na pobřeží roste tropický deštný prales.</p>
+        <div class="highlight" style="border-color:#2a8a4a;">Mexiko má na svém území přes 40 aktivních sopek, včetně Popocatépetlu nedaleko hlavního města.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region byl domovem vyspělých starověkých civilizací – <strong>Mayů</strong>, <strong>Aztéků</strong> a <strong>Olméků</strong>. V 16. století jej dobyli španělští conquistadoři, což zanechalo silný vliv <strong>španělského jazyka</strong> a katolicismu.</p>
+        <div class="highlight" style="border-color:#2a8a4a;">Mayská civilizace vytvořila propracovaný kalendář a psaný jazyk již více než tisíc let před příchodem Evropanů.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="central-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Panamský průplav vydělává zemi miliardy dolarů ročně z poplatků za proplutí lodí. Zemědělství regionu se soustředí na <strong>kávu</strong>, <strong>banány</strong> a cukrovou třtinu, důležitý je i cestovní ruch.</p>
+        <div class="highlight" style="border-color:#2a8a4a;">Kostarika je jednou z mála zemí světa, která nemá vlastní armádu – zrušila ji v roce 1948.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="central-score" style="color:#2a8a4a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="central-prog" style="background:#2a8a4a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('central')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="central-qgrid"></div>
+</div>
+
+<!-- ═══════════════ KARIBIK ═══════════════ -->
+<div class="region-panel" id="panel-caribbean">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#0aa0a0"></div><div class="stripe" style="background:#4ac0c0"></div><div class="stripe s3" style="background:#a0e0e0"></div></div>
+    <h1>Karibik</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#0aa0a0;border-color:#b0e0e0;background:#e6f8f8;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('caribbean',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('caribbean',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('caribbean',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('caribbean',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="caribbean-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Karibik tvoří tisíce ostrovů v Karibském moři mezi Severní a Jižní Amerikou. Patří sem <strong>Kuba</strong>, <strong>Jamajka</strong>, <strong>Haiti</strong>, <strong>Dominikánská republika</strong> a <strong>Portoriko</strong>.</p>
+        <p>Hlavní města: <strong>Havana</strong> (Kuba), <strong>Kingston</strong> (Jamajka), <strong>Port-au-Prince</strong> (Haiti) a <strong>Santo Domingo</strong> (Dominikánská republika).</p>
+        <div class="highlight" style="border-color:#0aa0a0;">Kuba je největším ostrovem Karibiku a od roku 1959 zde vládne komunistická strana.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="caribbean-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Ostrovy jsou sopečného nebo korálového původu, panuje tu <strong>tropické podnebí</strong> s hurikánovou sezónou od června do listopadu. Region je bohatý na korálové útesy a pestrou mořskou faunu.</p>
+        <div class="highlight" style="border-color:#0aa0a0;">Karibská hurikánová sezóna přináší každoročně desítky tropických bouří, z nichž některé dosahují síly ničivých hurikánů.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="caribbean-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Ostrovy kolonizovaly Španělsko, Francie, Británie a Nizozemsko, což zanechalo jazykovou i kulturní rozmanitost regionu. Na plantáže přivezli kolonizátoři statisíce zotročených lidí z Afriky, jejichž kultura výrazně formovala hudbu a náboženství regionu (např. <strong>reggae</strong>, santería).</p>
+        <div class="highlight" style="border-color:#0aa0a0;">Haiti se v roce 1804 stalo první nezávislou černošskou republikou na světě po vítězném povstání zotročených obyvatel.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="caribbean-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p>Klíčovým odvětvím je <strong>cestovní ruch</strong> – pláže a teplé moře lákají miliony turistů ročně. Pěstuje se cukrová třtina, káva a tabák, zejména proslulé kubánské doutníky.</p>
+        <div class="highlight" style="border-color:#0aa0a0;">Turistický ruch tvoří v některých karibských státech přes polovinu národního hospodářství.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="caribbean-score" style="color:#0aa0a0">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="caribbean-prog" style="background:#0aa0a0;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('caribbean')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="caribbean-qgrid"></div>
+</div>
+
+<!-- ═══════════════ ANDSKÉ STÁTY ═══════════════ -->
+<div class="region-panel" id="panel-andes">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#8a5a2a"></div><div class="stripe" style="background:#b08050"></div><div class="stripe s3" style="background:#d8b890"></div></div>
+    <h1>Andské státy</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#8a5a2a;border-color:#ddc0a0;background:#f6ede0;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('andes',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('andes',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('andes',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('andes',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="andes-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Podél západního pobřeží Jižní Ameriky se táhne pásmo Andských států – <strong>Kolumbie</strong>, <strong>Ekvádor</strong>, <strong>Peru</strong>, <strong>Bolívie</strong> a <strong>Chile</strong>.</p>
+        <p>Hlavní města: <strong>Bogotá</strong> (Kolumbie), <strong>Quito</strong> (Ekvádor), <strong>Lima</strong> (Peru), <strong>La Paz</strong> (Bolívie) a <strong>Santiago</strong> (Chile).</p>
+        <div class="highlight" style="border-color:#8a5a2a;">Bolívie má dvě hlavní města – správním sídlem je La Paz, ústavním hlavním městem pak Sucre.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="andes-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p><strong>Andy</strong> jsou nejdelším pohořím světa, táhnou se přes 7 000 km podél celého západního pobřeží kontinentu. V Peru a Bolívii leží jezero <strong>Titicaca</strong> – nejvýše položené splavné jezero na světě. Na severu Chile se rozkládá poušť <strong>Atacama</strong>, jedno z nejsušších míst na Zemi.</p>
+        <div class="highlight" style="border-color:#8a5a2a;">Poušť Atacama je tak suchá, že v některých jejích částech nikdy nezaznamenali déšť.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="andes-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Region byl centrem <strong>incké říše</strong>, jedné z největších předkolumbovských civilizací, s hlavním městem Cuzco. Španělé dobyli incké území v 16. století. Dodnes zde žije velký podíl indiánského obyvatelstva, hovořícího jazyky <strong>kečua</strong> a ajmara.</p>
+        <div class="highlight" style="border-color:#8a5a2a;">Machu Picchu, vysoko položené incké město v peruánských Andách, patří k nejnavštěvovanějším památkám světa.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="andes-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Chile</strong> je předním světovým producentem <strong>mědi</strong>, Bolívie těží velké zásoby <strong>lithia</strong> potřebného pro baterie. Peru a Ekvádor jsou důležitými producenty kávy, kakaa a ryb.</p>
+        <div class="highlight" style="border-color:#8a5a2a;">Chile a Bolívie spolu s Argentinou tvoří tzv. „lithiový trojúhelník“ s většinou světových zásob tohoto kovu.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="andes-score" style="color:#8a5a2a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="andes-prog" style="background:#8a5a2a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('andes')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="andes-qgrid"></div>
+</div>
+
+<!-- ═══════════════ BRAZÍLIE A JIŽNÍ KUŽEL ═══════════════ -->
+<div class="region-panel" id="panel-south">
+  <header>
+    <div class="stripes"><div class="stripe s1" style="background:#c8962a"></div><div class="stripe" style="background:#dcb45a"></div><div class="stripe s3" style="background:#eedaa0"></div></div>
+    <h1>Brazílie a jižní kužel</h1><p class="subtitle">Čtení s porozuměním · Zeměpis</p>
+  </header>
+  <div class="text-card">
+    <div class="text-label" style="color:#c8962a;border-color:#ecd8a8;background:#fcf5e6;">📖 Přečti si text</div>
+    <div class="chapters">
+      <button class="chap-btn active" onclick="showChap('south',0,this)">1. Poloha a státy</button>
+      <button class="chap-btn" onclick="showChap('south',1,this)">2. Příroda a podnebí</button>
+      <button class="chap-btn" onclick="showChap('south',2,this)">3. Obyvatelstvo a dějiny</button>
+      <button class="chap-btn" onclick="showChap('south',3,this)">4. Hospodářství</button>
+    </div>
+    <div class="chapter-content visible" id="south-chap-0">
+      <h2>Poloha a státy</h2>
+      <div class="text-body">
+        <p>Jihovýchod kontinentu tvoří <strong>Brazílie</strong> a státy tzv. jižního kužele (Cono Sur) – <strong>Argentina</strong>, <strong>Uruguay</strong> a <strong>Paraguay</strong>.</p>
+        <p>Hlavní města: <strong>Brasília</strong> (Brazílie), <strong>Buenos Aires</strong> (Argentina), <strong>Montevideo</strong> (Uruguay) a <strong>Asunción</strong> (Paraguay).</p>
+        <div class="highlight" style="border-color:#c8962a;">Brazílie je rozlohou i počtem obyvatel největší zemí Jižní Ameriky a jediným portugalsky mluvícím státem kontinentu.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-1">
+      <h2>Příroda a podnebí</h2>
+      <div class="text-body">
+        <p>Sever Brazílie pokrývá <strong>Amazonský deštný prales</strong> – největší tropický prales světa, kterým protéká řeka <strong>Amazonka</strong>, druhá nejdelší řeka planety. Jih regionu tvoří rozlehlé travnaté pláně zvané <strong>pampa</strong>, typické pro Argentinu a Uruguay.</p>
+        <div class="highlight" style="border-color:#c8962a;">Amazonský prales je domovem odhadem 10 % všech živočišných druhů na Zemi a bývá označován za „plíce planety“.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-2">
+      <h2>Obyvatelstvo a dějiny</h2>
+      <div class="text-body">
+        <p>Brazílii kolonizovalo <strong>Portugalsko</strong>, zatímco Argentinu, Uruguay a Paraguay ovládalo <strong>Španělsko</strong> – proto se v Brazílii mluví portugalsky a v ostatních zemích regionu španělsky. Region je známý pestrou směsicí evropských, afrických a indiánských kulturních vlivů.</p>
+        <div class="highlight" style="border-color:#c8962a;">Do Brazílie bylo v koloniální éře převezeno přes 4 miliony zotročených Afričanů – více než do kterékoli jiné země amerického kontinentu.</div>
+      </div>
+    </div>
+    <div class="chapter-content" id="south-chap-3">
+      <h2>Hospodářství</h2>
+      <div class="text-body">
+        <p><strong>Brazílie</strong> má největší ekonomiku Jižní Ameriky, vyváží sóju, kávu a maso. <strong>Argentina</strong> je významným producentem obilí a hovězího masa, pěstovaného na rozsáhlých pampách.</p>
+        <div class="highlight" style="border-color:#c8962a;">Argentina je jedním z největších světových vývozců hovězího masa díky rozlehlým pastvinám pampy.</div>
+      </div>
+    </div>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-big" id="south-score" style="color:#c8962a">0/8</div><div class="score-info">správných odpovědí</div></div>
+    <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" id="south-prog" style="background:#c8962a;width:0%"></div></div></div>
+    <button class="btn-reset" onclick="resetRegion('south')">↺ Začít znovu</button>
+  </div>
+  <div class="questions-title">Otázky k textu</div>
+  <div class="questions-grid" id="south-qgrid"></div>
+</div>
+
+<script>
+const DATA = {
+  north: {
+    questions: [
+      { q: "Které město je hlavním městem USA?", opts: ["A) New York","B) Washington, D.C.","C) Los Angeles","D) Chicago"], ans: 1, cat: "Hlavní města" },
+      { q: "Který stát je druhým největším na světě rozlohou?", opts: ["A) USA","B) Kanada","C) Rusko","D) Čína"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Jak se nazývá pohoří na západě Severní Ameriky?", opts: ["A) Apalačské hory","B) Andy","C) Skalisté hory","D) Sierra Nevada"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Kdy USA vyhlásily nezávislost?", opts: ["A) 1620","B) 1776","C) 1865","D) 1912"], ans: 1, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Kanady?", opts: ["A) Toronto","B) Vancouver","C) Ottawa","D) Montreal"], ans: 2, cat: "Hlavní města" },
+      { q: "Jaké jsou úřední jazyky Kanady?", opts: ["A) Angličtina a němčina","B) Angličtina a francouzština","C) Francouzština a španělština","D) Pouze angličtina"], ans: 1, cat: "Obyvatelstvo" },
+      { q: "Jak se nazývá technologické centrum v Kalifornii?", opts: ["A) Tech Valley","B) Silicon Valley","C) Digital Bay","D) Innovation Hub"], ans: 1, cat: "Hospodářství" },
+      { q: "Co tvoří Velká jezera na hranici USA a Kanady?", opts: ["A) Největší poušť Severní Ameriky","B) Největší plochu sladké vody na světě","C) Hranici s Mexikem","D) Zdroj zemního plynu"], ans: 1, cat: "Fyzická geografie" },
+    ]
+  },
+  central: {
+    questions: [
+      { q: "Které město je hlavním městem Mexika?", opts: ["A) Guadalajara","B) Ciudad de México","C) Monterrey","D) Cancún"], ans: 1, cat: "Hlavní města" },
+      { q: "Co spojuje Panamský průplav?", opts: ["A) Atlantský a Tichý oceán","B) Karibské a Rudé moře","C) Dva oceány v Africe","D) Mexický záliv se Středozemním mořem"], ans: 0, cat: "Hospodářství" },
+      { q: "Která starověká civilizace vytvořila propracovaný kalendář ve Střední Americe?", opts: ["A) Inkové","B) Aztékové","C) Mayové","D) Olmékové"], ans: 2, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Kostariky?", opts: ["A) San José","B) Managua","C) Tegucigalpa","D) San Salvador"], ans: 0, cat: "Hlavní města" },
+      { q: "Který národ dobyl region ve 16. století?", opts: ["A) Portugalci","B) Španělé","C) Britové","D) Francouzi"], ans: 1, cat: "Dějiny" },
+      { q: "Která plodina je pro region typická vedle banánů a cukrové třtiny?", opts: ["A) Čaj","B) Káva","C) Kakao","D) Rýže"], ans: 1, cat: "Hospodářství" },
+      { q: "Která země zrušila svou armádu v roce 1948?", opts: ["A) Panama","B) Guatemala","C) Kostarika","D) Honduras"], ans: 2, cat: "Dějiny" },
+      { q: "Kolik aktivních sopek má přibližně Mexiko?", opts: ["A) asi 5","B) asi 15","C) přes 40","D) přes 200"], ans: 2, cat: "Příroda" },
+    ]
+  },
+  caribbean: {
+    questions: [
+      { q: "Které město je hlavním městem Kuby?", opts: ["A) Santiago de Cuba","B) Havana","C) Varadero","D) Camagüey"], ans: 1, cat: "Hlavní města" },
+      { q: "Který ostrov je největší v Karibiku?", opts: ["A) Jamajka","B) Haiti","C) Kuba","D) Portoriko"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Od kdy do kdy trvá karibská hurikánová sezóna?", opts: ["A) leden–duben","B) červen–listopad","C) srpen–prosinec","D) po celý rok"], ans: 1, cat: "Podnebí" },
+      { q: "Která země se stala první nezávislou černošskou republikou na světě?", opts: ["A) Jamajka","B) Kuba","C) Haiti","D) Dominikánská republika"], ans: 2, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Jamajky?", opts: ["A) Montego Bay","B) Kingston","C) Ocho Rios","D) Negril"], ans: 1, cat: "Hlavní města" },
+      { q: "Jaký hudební styl pochází z Karibiku?", opts: ["A) Jazz","B) Reggae","C) Flamenco","D) Tango"], ans: 1, cat: "Obyvatelstvo" },
+      { q: "Které plodině vděčí za slávu kubánské doutníky?", opts: ["A) Kávě","B) Kakau","C) Tabáku","D) Cukrové třtině"], ans: 2, cat: "Hospodářství" },
+      { q: "Které odvětví je pro karibskou ekonomiku klíčové?", opts: ["A) Těžba nerostů","B) Cestovní ruch","C) Automobilový průmysl","D) Rybolov v hlubinách"], ans: 1, cat: "Hospodářství" },
+    ]
+  },
+  andes: {
+    questions: [
+      { q: "Které město je hlavním městem Peru?", opts: ["A) Cuzco","B) Lima","C) Arequipa","D) Trujillo"], ans: 1, cat: "Hlavní města" },
+      { q: "Jak dlouhé je pohoří Andy přibližně?", opts: ["A) asi 2 000 km","B) asi 4 000 km","C) přes 7 000 km","D) přes 15 000 km"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jak se nazývá jezero mezi Peru a Bolívií?", opts: ["A) Poopó","B) Titicaca","C) Maracaibo","D) Nahuel Huapi"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Která poušť v Chile patří k nejsušším místům na Zemi?", opts: ["A) Sahara","B) Patagonská poušť","C) Atacama","D) Gobi"], ans: 2, cat: "Příroda" },
+      { q: "Které starověké impérium mělo centrum v dnešním Peru?", opts: ["A) Aztécká říše","B) Mayská říše","C) Incká říše","D) Olmécká říše"], ans: 2, cat: "Dějiny" },
+      { q: "Jaké je hlavní město Kolumbie?", opts: ["A) Medellín","B) Cali","C) Bogotá","D) Cartagena"], ans: 2, cat: "Hlavní města" },
+      { q: "Kterou surovinu těží ve velkém Bolívie pro výrobu baterií?", opts: ["A) Kobalt","B) Lithium","C) Nikl","D) Platinu"], ans: 1, cat: "Hospodářství" },
+      { q: "Který kov je klíčovým vývozním artiklem Chile?", opts: ["A) Zlato","B) Stříbro","C) Měď","D) Železo"], ans: 2, cat: "Hospodářství" },
+    ]
+  },
+  south: {
+    questions: [
+      { q: "Které město je hlavním městem Brazílie?", opts: ["A) Rio de Janeiro","B) São Paulo","C) Brasília","D) Salvador"], ans: 2, cat: "Hlavní města" },
+      { q: "Kterým jazykem se mluví v Brazílii na rozdíl od zbytku kontinentu?", opts: ["A) Španělsky","B) Portugalsky","C) Francouzsky","D) Italsky"], ans: 1, cat: "Obyvatelstvo" },
+      { q: "Jak se nazývá největší tropický prales světa?", opts: ["A) Konžský prales","B) Amazonský prales","C) Bornejský prales","D) Daintree"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Která řeka protéká Amazonským pralesem?", opts: ["A) Paraná","B) Orinoko","C) Amazonka","D) Río de la Plata"], ans: 2, cat: "Fyzická geografie" },
+      { q: "Jaké je hlavní město Argentiny?", opts: ["A) Córdoba","B) Buenos Aires","C) Rosario","D) Mendoza"], ans: 1, cat: "Hlavní města" },
+      { q: "Jak se nazývají rozlehlé travnaté pláně v Argentině?", opts: ["A) Savana","B) Pampa","C) Tundra","D) Stepi"], ans: 1, cat: "Fyzická geografie" },
+      { q: "Který stát kolonizoval Brazílii?", opts: ["A) Španělsko","B) Francie","C) Portugalsko","D) Nizozemsko"], ans: 2, cat: "Dějiny" },
+      { q: "Čím je Argentina proslulá v zemědělské produkci?", opts: ["A) Rýží","B) Hovězím masem a obilím","C) Kávou","D) Bavlnou"], ans: 1, cat: "Hospodářství" },
+    ]
+  }
+};
+
+const state = {};
+Object.keys(DATA).forEach(r => { state[r] = { answered: [], correct: [] }; resetRegion(r); });
+
+function resetRegion(r) {
+  const n = DATA[r].questions.length;
+  state[r] = { answered: new Array(n).fill(false), correct: new Array(n).fill(false) };
+  updateScore(r);
+  renderQuestions(r);
+}
+
+function updateScore(r) {
+  const s = state[r];
+  const c = s.correct.filter(Boolean).length;
+  const a = s.answered.filter(Boolean).length;
+  const n = DATA[r].questions.length;
+  document.getElementById(`${r}-score`).textContent = `${c}/${n}`;
+  document.getElementById(`${r}-prog`).style.width = Math.round((a / n) * 100) + '%';
+}
+
+function choose(r, qi, oi) {
+  if (state[r].answered[qi]) return;
+  state[r].answered[qi] = true;
+  const q = DATA[r].questions[qi];
+  const btns = document.querySelectorAll(`#${r}-opts-${qi} .opt`);
+  const expl = document.getElementById(`${r}-expl-${qi}`);
+  const card = document.getElementById(`${r}-card-${qi}`);
+  btns.forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.ans) b.classList.add('correct');
+    else if (idx === oi && oi !== q.ans) b.classList.add('wrong');
+  });
+  if (oi === q.ans) {
+    state[r].correct[qi] = true;
+    expl.textContent = '✓ Správně!';
+    expl.className = 'explain show-c';
+    card.classList.add('answered-correct');
+  } else {
+    expl.textContent = '✗ Špatně. Správná odpověď: ' + q.opts[q.ans].replace(/^[A-D]\) /, '');
+    expl.className = 'explain show-w';
+    card.classList.add('answered-wrong');
+  }
+  updateScore(r);
+}
+
+function renderQuestions(r) {
+  const qs = DATA[r].questions;
+  document.getElementById(`${r}-qgrid`).innerHTML = qs.map((q, qi) => `
+    <div class="qcard" id="${r}-card-${qi}">
+      <div class="qcard-top">
+        <div class="qnum">${qi + 1}</div>
+        <div class="qmeta">
+          <div class="cat-tag">${q.cat}</div>
+          <div class="qtext">${q.q}</div>
+        </div>
+      </div>
+      <div class="opts" id="${r}-opts-${qi}">
+        ${q.opts.map((o, oi) => `<button class="opt" onclick="choose('${r}',${qi},${oi})">${o}</button>`).join('')}
+      </div>
+      <div class="explain" id="${r}-expl-${qi}"></div>
+    </div>
+  `).join('');
+}
+
+function showRegion(r, btn) {
+  document.querySelectorAll('.region-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${r}`).classList.add('visible');
+  btn.classList.add('active');
+}
+
+function showChap(r, idx, btn) {
+  document.querySelectorAll(`#panel-${r} .chapter-content`).forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll(`#panel-${r} .chap-btn`).forEach(el => el.classList.remove('active'));
+  document.getElementById(`${r}-chap-${idx}`).classList.add('visible');
+  btn.classList.add('active');
+}
+</script>
+<button class="print-btn" onclick="window.print()">🖨 Vytisknout</button>
+</body>
+</html>

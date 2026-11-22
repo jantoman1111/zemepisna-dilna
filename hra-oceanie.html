@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oceánie – Státy a hlavní města | interaktivní hra</title>
+<style>
+  :root {
+    --country-bg: #fdf1e0;
+    --country-border: #e0a94c;
+    --country-text: #7a4a00;
+    --capital-bg: #e3f0fb;
+    --capital-border: #5b9bd5;
+    --capital-text: #16497a;
+    --matched-bg: #e5f5e6;
+    --matched-border: #4caf50;
+    --matched-text: #1e6b23;
+    --wrong-bg: #fdecea;
+    --wrong-border: #e2564f;
+    --wrong-text: #a3241d;
+    --selected-shadow: 0 0 0 3px #ffca2880;
+    --ink: #222;
+    --muted: #666;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Verdana, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    color: var(--ink);
+  }
+
+  header {
+    background: #16497a;
+    color: white;
+    padding: 26px 16px 22px 16px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 6px 0;
+    font-size: 30px;
+  }
+  header p {
+    margin: 0;
+    font-size: 15px;
+    color: #cfe2f5;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 18px 10px;
+    background: white;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .toolbar button {
+    border: none;
+    padding: 13px 26px;
+    border-radius: 24px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #eee;
+    color: #333;
+    transition: background 0.15s;
+  }
+  .toolbar button.active {
+    background: #16497a;
+    color: white;
+  }
+  .toolbar button.print-btn {
+    background: #2f7f4f;
+    color: white;
+  }
+
+  .region-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px 10px 8px 10px;
+    background: white;
+  }
+  .region-tabs button {
+    border: 3px solid #ccc;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #444;
+  }
+  .region-tabs button.active {
+    color: white;
+    border-color: transparent;
+  }
+
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 30px 60px 30px;
+  }
+
+  /* ---------- HRA (interaktivní) ---------- */
+  #gameView { display: block; }
+
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 4px 22px 4px;
+  }
+  .progress-row span { font-size: 20px; color: var(--muted); font-weight: 500; }
+  .progress-row button {
+    border: 1px solid #bbb;
+    background: white;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 17px;
+    cursor: pointer;
+  }
+
+  .game-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .card-col {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+
+  .game-card {
+    border: 3px solid transparent;
+    border-radius: 14px;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.25;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.08s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .game-card:active { transform: scale(0.97); }
+  .game-card.country { background: var(--country-bg); border-color: var(--country-border); color: var(--country-text); }
+  .game-card.capital { background: var(--capital-bg); border-color: var(--capital-border); color: var(--capital-text); }
+  .game-card.matched { background: var(--matched-bg); border-color: var(--matched-border); color: var(--matched-text); cursor: default; }
+  .game-card.wrong { background: var(--wrong-bg); border-color: var(--wrong-border); color: var(--wrong-text); }
+  .game-card.selected { box-shadow: var(--selected-shadow); }
+
+  .done-msg {
+    display: none;
+    margin-top: 28px;
+    padding: 22px;
+    background: var(--matched-bg);
+    border: 2px solid var(--matched-border);
+    border-radius: 12px;
+    color: var(--matched-text);
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  /* ---------- TISK (statické karty) ---------- */
+  #printView { display: none; }
+
+  .print-instrukce {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 14px 0;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 4px 0 18px 0;
+    font-size: 12px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .swatch.c1 { background: var(--country-bg); border: 2px solid var(--country-border); }
+  .swatch.c2 { background: var(--capital-bg); border: 2px solid var(--capital-border); }
+
+  .region-section-print {
+    margin-bottom: 30px;
+  }
+  .region-title-print {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 4px 0;
+    padding: 8px;
+    border-radius: 8px;
+    color: white;
+  }
+  .region-sub-print {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .print-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .print-card {
+    border: 2px dashed #999;
+    border-radius: 8px;
+    padding: 8px 5px;
+    text-align: center;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11.5px;
+  }
+  .print-card.country { background: var(--country-bg); border-color: var(--country-border); color: var(--country-text); }
+  .print-card.capital { background: var(--capital-bg); border-color: var(--capital-border); color: var(--capital-text); }
+
+  .answer-key {
+    margin-top: 20px;
+    padding: 0 4px;
+  }
+  .answer-key h2 { text-align: center; font-size: 17px; }
+  .answer-key h3 { font-size: 14px; margin-top: 16px; margin-bottom: 4px; }
+  .answer-key table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  .answer-key td, .answer-key th { border: 1px solid #ccc; padding: 5px 10px; text-align: left; font-size: 12px; }
+  .answer-key th { background: #f2f2f2; }
+
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    header, .toolbar, .region-tabs { display: none !important; }
+    #gameView { display: none !important; }
+    #printView { display: block !important; }
+    .region-section-print { page-break-after: always; }
+    .answer-key { page-break-before: always; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Oceánie – Státy a hlavní města</h1>
+  <p>Interaktivní procvičování i tiskové kartičky, rozdělené podle regionů</p>
+</header>
+
+<div class="toolbar">
+  <button id="modeGameBtn" class="active">Hra (interaktivní)</button>
+  <button id="modePrintBtn">Náhled k tisku</button>
+  <button class="print-btn" onclick="window.print()">Vytisknout vše</button>
+</div>
+
+<div class="region-tabs" id="regionTabsGame"></div>
+
+<main>
+
+  <div id="gameView">
+    <div class="progress-row">
+      <span id="progressText"></span>
+      <button id="resetBtn">↻ Zamíchat znovu</button>
+    </div>
+    <div class="game-columns">
+      <div class="card-col" id="colCountry"></div>
+      <div class="card-col" id="colCapital"></div>
+    </div>
+    <div class="done-msg" id="doneMsg"></div>
+  </div>
+
+  <div id="printView">
+    <p class="print-instrukce">Rozstříhejte kartičky pro každý region zvlášť a spojte stát (oranžová) s hlavním městem (modrá).</p>
+    <div class="legend">
+      <span><span class="swatch c1"></span> Stát</span>
+      <span><span class="swatch c2"></span> Hlavní město</span>
+    </div>
+    <div id="printRegions"></div>
+    <div class="answer-key">
+      <h2>Řešení (pro učitele)</h2>
+      <div id="answerContainer"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const regions = [
+  {key:"anz",name:"Austrálie a Nový Zéland",color:"#2f7fb0",pairs:[["Austrálie", "Canberra"], ["Nový Zéland", "Wellington"]]},
+  {key:"mel",name:"Melanésie",color:"#3d8c40",pairs:[["Papua-Nová Guinea", "Port Moresby"], ["Šalamounovy ostrovy", "Honiara"], ["Vanuatu", "Port Vila"], ["Fidži", "Suva"]]},
+  {key:"mik",name:"Mikronésie",color:"#c2703d",pairs:[["Kiribati", "Tarawa"], ["Mikronésie", "Palikir"], ["Marshallovy ostrovy", "Majuro"], ["Palau", "Ngerulmud"], ["Nauru", "Yaren"]]},
+  {key:"pol",name:"Polynésie",color:"#7a4fae",pairs:[["Samoa", "Apia"], ["Tonga", "Nukuʻalofa"], ["Tuvalu", "Funafuti"]]}
+];
+
+/* ================= PŘEPÍNÁNÍ REŽIMU ================= */
+const modeGameBtn = document.getElementById('modeGameBtn');
+const modePrintBtn = document.getElementById('modePrintBtn');
+const gameView = document.getElementById('gameView');
+const printView = document.getElementById('printView');
+
+modeGameBtn.onclick = () => {
+  modeGameBtn.classList.add('active');
+  modePrintBtn.classList.remove('active');
+  gameView.style.display = 'block';
+  printView.style.display = 'none';
+};
+modePrintBtn.onclick = () => {
+  modePrintBtn.classList.add('active');
+  modeGameBtn.classList.remove('active');
+  printView.style.display = 'block';
+  gameView.style.display = 'none';
+};
+
+/* ================= HRA ================= */
+let currentRegionIdx = 0;
+let selectedCountry = null;
+let selectedCapital = null;
+let matchedCount = 0;
+let pairs = [];
+let countryOrderState = [];
+let capitalOrderState = [];
+let currentCardCfg = null;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderRegionTabs() {
+  const el = document.getElementById('regionTabsGame');
+  el.innerHTML = '';
+  regions.forEach((r, idx) => {
+    const btn = document.createElement('button');
+    btn.textContent = r.name + ' (' + r.pairs.length + ')';
+    if (idx === currentRegionIdx) {
+      btn.classList.add('active');
+      btn.style.background = r.color;
+    }
+    btn.onclick = () => { currentRegionIdx = idx; startGame(); };
+    el.appendChild(btn);
+  });
+}
+
+function getSizeConfig(count) {
+  if (count <= 6)  return { minWidth: 260, font: 26, pad: '26px 16px', minH: 90 };
+  if (count <= 9)  return { minWidth: 220, font: 22, pad: '20px 14px', minH: 78 };
+  if (count <= 13) return { minWidth: 180, font: 19, pad: '16px 12px', minH: 68 };
+  return               { minWidth: 150, font: 17, pad: '13px 10px', minH: 60 };
+}
+
+function startGame() {
+  selectedCountry = null;
+  selectedCapital = null;
+  matchedCount = 0;
+  document.getElementById('doneMsg').style.display = 'none';
+
+  const data = regions[currentRegionIdx].pairs;
+  pairs = data.map(([country, capital], idx) => ({ id: idx, country, capital, matched: false }));
+
+  countryOrderState = shuffle(pairs.map(p => p.id));
+  capitalOrderState = shuffle(pairs.map(p => p.id));
+
+  const cfg = getSizeConfig(pairs.length);
+  const colCountry = document.getElementById('colCountry');
+  const colCapital = document.getElementById('colCapital');
+  const colsStyle = 'repeat(auto-fit, minmax(' + cfg.minWidth + 'px, 1fr))';
+  colCountry.style.gridTemplateColumns = colsStyle;
+  colCapital.style.gridTemplateColumns = colsStyle;
+  currentCardCfg = cfg;
+
+  renderRegionTabs();
+  drawColumns();
+  updateProgress();
+}
+
+function cardClass(base, state) {
+  let cls = 'game-card ' + base;
+  if (state === 'matched') cls += ' matched';
+  if (state === 'wrong') cls += ' wrong';
+  if (state === 'selected') cls += ' selected';
+  return cls;
+}
+
+function applyCardSize(div) {
+  const cfg = currentCardCfg;
+  if (!cfg) return;
+  div.style.fontSize = cfg.font + 'px';
+  div.style.padding = cfg.pad;
+  div.style.minHeight = cfg.minH + 'px';
+}
+
+function drawColumns() {
+  const colCountry = document.getElementById('colCountry');
+  const colCapital = document.getElementById('colCapital');
+  colCountry.innerHTML = '';
+  colCapital.innerHTML = '';
+
+  countryOrderState.forEach(id => {
+    const p = pairs.find(x => x.id === id);
+    const div = document.createElement('div');
+    let state = p.matched ? 'matched' : (selectedCountry === id ? 'selected' : '');
+    div.className = cardClass('country', state);
+    div.textContent = p.country;
+    applyCardSize(div);
+    if (!p.matched) div.onclick = () => onSelectCountry(id);
+    colCountry.appendChild(div);
+  });
+
+  capitalOrderState.forEach(id => {
+    const p = pairs.find(x => x.id === id);
+    const div = document.createElement('div');
+    let state = p.matched ? 'matched' : (selectedCapital === id ? 'selected' : '');
+    div.className = cardClass('capital', state);
+    div.textContent = p.capital;
+    applyCardSize(div);
+    if (!p.matched) div.onclick = () => onSelectCapital(id);
+    colCapital.appendChild(div);
+  });
+}
+
+function onSelectCountry(id) {
+  selectedCountry = id;
+  drawColumns();
+  tryMatch();
+}
+function onSelectCapital(id) {
+  selectedCapital = id;
+  drawColumns();
+  tryMatch();
+}
+
+function tryMatch() {
+  if (selectedCountry === null || selectedCapital === null) return;
+  if (selectedCountry === selectedCapital) {
+    const p = pairs.find(x => x.id === selectedCountry);
+    p.matched = true;
+    matchedCount++;
+    selectedCountry = null;
+    selectedCapital = null;
+    drawColumns();
+    updateProgress();
+    if (matchedCount === pairs.length) {
+      const msg = document.getElementById('doneMsg');
+      msg.textContent = 'Hotovo! Všech ' + pairs.length + ' dvojic spárováno v regionu ' + regions[currentRegionIdx].name + '.';
+      msg.style.display = 'block';
+    }
+  } else {
+    const cId = selectedCountry, capId = selectedCapital;
+    flashWrong(cId, capId);
+    selectedCountry = null;
+    selectedCapital = null;
+  }
+}
+
+function flashWrong(cId, capId) {
+  const cIdx = countryOrderState.indexOf(cId);
+  const capIdx = capitalOrderState.indexOf(capId);
+  const colCountry = document.getElementById('colCountry');
+  const colCapital = document.getElementById('colCapital');
+  if (cIdx > -1) {
+    colCountry.children[cIdx].className = cardClass('country', 'wrong');
+    applyCardSize(colCountry.children[cIdx]);
+  }
+  if (capIdx > -1) {
+    colCapital.children[capIdx].className = cardClass('capital', 'wrong');
+    applyCardSize(colCapital.children[capIdx]);
+  }
+  setTimeout(drawColumns, 450);
+}
+
+function updateProgress() {
+  document.getElementById('progressText').textContent = matchedCount + ' / ' + pairs.length + ' spárováno';
+}
+
+document.getElementById('resetBtn').onclick = startGame;
+
+/* ================= TISK ================= */
+function buildPrintView() {
+  const printRegions = document.getElementById('printRegions');
+  const answerContainer = document.getElementById('answerContainer');
+  printRegions.innerHTML = '';
+  answerContainer.innerHTML = '';
+
+  regions.forEach(region => {
+    const section = document.createElement('div');
+    section.className = 'region-section-print';
+
+    const title = document.createElement('div');
+    title.className = 'region-title-print';
+    title.style.background = region.color;
+    title.textContent = region.name;
+    section.appendChild(title);
+
+    const sub = document.createElement('div');
+    sub.className = 'region-sub-print';
+    sub.textContent = region.pairs.length + ' států ke spárování';
+    section.appendChild(sub);
+
+    const grid = document.createElement('div');
+    grid.className = 'print-grid';
+
+    let cards = [];
+    region.pairs.forEach(([country, capital]) => {
+      cards.push({ text: country, type: 'country' });
+      cards.push({ text: capital, type: 'capital' });
+    });
+    cards = shuffle(cards);
+
+    cards.forEach(card => {
+      const div = document.createElement('div');
+      div.className = 'print-card ' + card.type;
+      div.textContent = card.text;
+      grid.appendChild(div);
+    });
+
+    section.appendChild(grid);
+    printRegions.appendChild(section);
+
+    const h3 = document.createElement('h3');
+    h3.textContent = region.name;
+    answerContainer.appendChild(h3);
+
+    const table = document.createElement('table');
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = '<th>Stát</th><th>Hlavní město</th>';
+    table.appendChild(headerRow);
+
+    region.pairs.forEach(([country, capital]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + country + '</td><td>' + capital + '</td>';
+      table.appendChild(tr);
+    });
+    answerContainer.appendChild(table);
+  });
+}
+
+/* ================= INIT ================= */
+startGame();
+buildPrintView();
+</script>
+
+</body>
+</html>
