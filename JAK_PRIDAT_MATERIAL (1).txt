@@ -1,0 +1,8 @@
+NOVÝ MATERIÁL (automaticky):
+1) Na GitHubu: Add file -> Upload files -> přetáhni nový .html soubor (ten už obsahuje štítky zd-...) -> Commit changes.
+2) Hotovo. Netlify při nasazení sám sestaví seznam (materialy.json) a karta se objeví.
+   Pokud je ve štítku zd-od datum v budoucnu, objeví se až ten den.
+Štítky v <head> každého materiálu (připravuje je Claude):
+ zd-title, zd-desc, zd-cat, zd-label, zd-icon, zd-tag, zd-od (volitelné), zd-also (volitelné)
+Soubory bez štítku zd-title se do seznamu nedávají (ty jsou už ručně v index.html).
+Tip: nahrávej víc souborů najednou jedním commitem – každý commit = jedno nasazení.
