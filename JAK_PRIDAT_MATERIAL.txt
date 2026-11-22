@@ -5,3 +5,7 @@ Denně nový materiál (0 kreditů):
  cat = europe/africa/asia/america/oceania/cesko/hry/generator/vodstvo ; also je volitelné (druhá kategorie)
  label: Lekce / Atlas / Čtení / Test / Hra (podle toho se zařadí do filtru typu)
 3) Commit -> Netlify se za minutu sám aktualizuje.
+
+Naplánované zveřejnění: přidej do řádku pole "od":"RRRR-MM-DD", např.
+ {"id":"x","cat":"cesko","label":"Lekce","icon":"📄","title":"Název","desc":"Popis","tag":"1 list","file":"x.html","od":"2026-12-07"}
+Materiál se na webu objeví od tohoto dne (soubor je na GitHubu už dřív, ale nikdo ho nevidí v seznamu).
